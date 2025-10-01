@@ -33,37 +33,37 @@ class EmailUsAPIView(APIView):
                     },
                     status=HTTP_400_BAD_REQUEST,
                 )
+            else:
+                # Extract validated data
+                sender_name = form.cleaned_data["name"]
+                sender_email = form.cleaned_data["email"]
+                sender_subject = form.cleaned_data["subject"]
+                sender_message = form.cleaned_data["message"]
 
-            # Extract validated data
-            sender_name = form.cleaned_data["name"]
-            sender_email = form.cleaned_data["email"]
-            sender_subject = form.cleaned_data["subject"]
-            sender_message = form.cleaned_data["message"]
+                # Get recipient email
+                recipient_email = self._get_recipient_email()
 
-            # Get recipient email
-            recipient_email = self._get_recipient_email()
+                # Prepare email context
+                email_context: Dict[str, Any] = {
+                    "name": sender_name,
+                    "email": sender_email,
+                    "subject": sender_subject,
+                    "message": sender_message,
+                    "url": request.build_absolute_uri("/"),
+                }
 
-            # Prepare email context
-            email_context: Dict[str, Any] = {
-                "name": sender_name,
-                "email": sender_email,
-                "subject": sender_subject,
-                "message": sender_message,
-                "url": request.build_absolute_uri("/"),
-            }
+                # Send email
+                self._send_contact_email(sender_subject, sender_email, recipient_email, email_context)
 
-            # Send email
-            self._send_contact_email(sender_subject, sender_email, recipient_email, email_context)
+                logger.info(f"EmailUsForm email sent successfully from {sender_email}")
 
-            logger.info(f"EmailUsForm email sent successfully from {sender_email}")
-
-            return Response(
-                {
-                    "success": True,
-                    "message": "Thank you for your message! We will get back to you soon.",
-                },
-                status=HTTP_200_OK,
-            )
+                return Response(
+                    {
+                        "success": True,
+                        "message": "Thank you for your message! We will get back to you soon.",
+                    },
+                    status=HTTP_200_OK,
+                )
 
         except ValueError as e:
             # Configuration errors (like missing recipient email)
