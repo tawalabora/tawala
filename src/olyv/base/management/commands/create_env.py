@@ -87,9 +87,6 @@ ALLOWED_HOSTS="localhost,127.0.0.1"
 # SITE_DESCRIPTION="Delivering Stationery Supplies"
 # SITE_THEME_COLOR="#ef4444"
 # SITE_KEYWORDS="bigpen,Online BigPen Kenya,ecommerce"
-# SITE_AUTHOR="christianwhocodes"
-# SITE_AUTHOR_URL="https://github.com/christianwhocodes/"
-# SITE_NAVIGATION_TYPE="navbar"
 
 # 🖼️ Site Assets
 # SITE_LOGO="/lib/static/olyv/img/logo.png"
