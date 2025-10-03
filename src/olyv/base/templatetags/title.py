@@ -6,31 +6,6 @@ from django.utils.safestring import SafeString, mark_safe
 register = template.Library()
 
 
-@register.simple_tag
-def get_env(setting: str) -> str:
-    """
-    Get site configuration values from environment variables with optional static file defaults.
-
-    Retrieves any environment variable value. For common site assets, provides fallback
-    to default static file paths if the environment variable is not set. For other
-    environment variables, returns the value as-is or empty string if not found.
-
-    Args:
-        setting: The setting variable name to look up (e.g., "SITE_NAME",
-                  "DEBUG", etc.).
-
-    Returns:
-        The setting variable value stripped of whitespace. Returns empty string if not found.
-
-    Usage:
-        {% get_env "SITE_LOGO" %}        ← returns env value or static default
-        {% get_env "SITE_NAME" %}         ← returns env value or empty string
-        {% get_env "DEBUG" %}             ← returns env value or empty string
-    """
-
-    return getattr(settings, setting, "").strip()
-
-
 @register.simple_tag(takes_context=True)
 def title(context: Context, title: str | None = None, separator: str = " | ") -> SafeString:
     """

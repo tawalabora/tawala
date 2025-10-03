@@ -1,5 +1,3 @@
-{% load base_tags %}
-
 {% if section_navigation|default_if_none:"header" == "header" %}
   <header id="section_header" class="d-flex align-items-center 
     {% if section_hero|default_if_none:False %}fixed-top{% endif %}
@@ -11,8 +9,8 @@
           {% comment  %}
             <a href="" class="logo d-flex align-items-center">
               {# Uncomment the line below if you also wish to use an image logo #}
-              <img src="{% get_env 'SITE_LOGO' %}" class="img-fluid" alt="logo" width="" height="" />
-                <h1 class="sitename">{% get_env 'SITE_NAME' %}</h1>
+              <img src="{{ SITE_LOGO }}" class="img-fluid" alt="logo" width="" height="" />
+                <h1 class="sitename">{{ SITE_NAME }}</h1>
             </a>
           {% endcomment %}
         </div>
@@ -30,9 +28,7 @@
       </div>
     </div>
   </header>
-{% endif %}
-
-{% if section_navigation|default_if_none:"header" == "aside" %}
+{% elif section_navigation == "aside" %}
   <aside>
     <div class="d-none"></div>
   </aside>
