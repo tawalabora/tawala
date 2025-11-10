@@ -15,7 +15,7 @@ def main() -> None:
     sys.argv = [sys.argv[0]] + sys.argv[2:]
 
     match command:
-        case "new":
+        case "new" | "init" | "create":
             from tawala.scripts.new import main as new
 
             new()
@@ -30,10 +30,11 @@ def print_help() -> None:
     """Print available commands."""
     print(colored("Tawala CLI", "cyan", attrs=["bold"]))
     print("\nAvailable commands:")
-    print("  new [project-name]  Create a new Tawala project")
+    print("  new|init|create [project-name]  Create a new Tawala project")
     print("\nUsage:")
     print("  uvx tawala new my-app")
-    print("  uvx tawala new .")
+    print("  uvx tawala init my-app")
+    print("  uvx tawala create .")
 
 
 if __name__ == "__main__":
