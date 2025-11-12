@@ -1,6 +1,6 @@
 [project]
 name = "tawala"
-version = "0.1.11"
+version = "0.1.12"
 description = "Add your description here"
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -10,7 +10,7 @@ dependencies = [
     "django>=5.2.8",
     "django-sass-processor>=1.4.2",
     "libsass>=0.23.0",
-    "django-compressor>=4.5.1",
+    "django-compressor>=4.6.0",
     "termcolor>=3.2.0",
 ]
 
