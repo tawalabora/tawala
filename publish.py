@@ -115,23 +115,20 @@ class GitManager:
         console.print("\n🔄 Syncing dependencies...", style="blue")
         self.run_command("uv sync")
 
-    def get_changed_files(self) -> list[str]:
-        """Get list of changed files"""
-        status = self.run_command("git status --porcelain", check=False)
-        return [
-            line.split()[-1]
-            for line in status.stdout.strip().split("\n")
-            if line.strip()
-        ]
-
     def commit_changes(self, new_version: str) -> None:
         """Stage and commit changes"""
         console.print("\n📋 Checking for uncommitted changes...", style="blue")
-        changed_files = self.get_changed_files()
+        status_result = self.run_command("git status --porcelain", check=False)
+        status_output = status_result.stdout.strip()
 
-        if not changed_files:
+        if not status_output:
             console.print("No changes to commit", style="yellow")
             return
+
+        # Parse changed files from the status output
+        changed_files = [
+            line.split()[-1] for line in status_output.split("\n") if line.strip()
+        ]
 
         # If only version files changed, commit automatically
         if set(changed_files) == {"pyproject.toml", "uv.lock"}:
@@ -140,9 +137,8 @@ class GitManager:
             console.print("✅ Committed version bump automatically", style="green")
         else:
             # Ask user about other changes
-            status = self.run_command("git status --porcelain", check=False)
             console.print("\n⚠️  You have uncommitted changes:", style="yellow")
-            print(status.stdout)
+            print(status_output)
             console.print(
                 "\n❓ Include all changes in this version commit? (y/n): ",
                 style="yellow",
