@@ -1,18 +1,24 @@
 [project]
 name = "tawala"
-version = "0.2.0"
+version = "0.2.1"
 description = "Add your description here"
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [{ name = "christianwhocodes", email = "kevin@wakhisi.space" }]
 requires-python = ">=3.12"
 dependencies = [
-    "django>=6.0b1",
-    "termcolor>=3.2.0",
+ "django>=5.2.8",
+ "pyperclip>=1.11.0",
+ "tawala",
 ]
 
 [dependency-groups]
-dev = ["djlint>=1.36.4"]
+dev = [
+    "psycopg[binary,pool]>=3.2.12",
+    "python-decouple>=3.8",
+    "djlint>=1.36.4",
+    "termcolor>=3.2.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/christianwhocodes/tawala"
@@ -25,6 +31,9 @@ tawala = "tawala.cli:main"
 [build-system]
 requires = ["uv_build>=0.9.7,<0.10.0"]
 build-backend = "uv_build"
+
+[tool.uv.sources]
+tawala = { path = ".", editable = true }
 
 [[tool.uv.index]]
 name = "testpypi"
