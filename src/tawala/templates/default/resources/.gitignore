@@ -1,0 +1,8 @@
+# STATIC_ROOT
+static/
+
+# MEDIA_ROOT
+media/
+
+# SQLite Database
+db.sqlite3

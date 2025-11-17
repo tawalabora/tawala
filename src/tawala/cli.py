@@ -1,51 +1,33 @@
-import subprocess
-import sys
-from pathlib import Path
+#!/usr/bin/env python
 
-from termcolor import colored
+import os
+import sys
+
+from django.conf import settings
+
+# Configure Django settings
+if not settings.configured:
+    settings.configure(INSTALLED_APPS=["scripts"])
 
 
 def main() -> None:
-    """Main CLI entry point for tawala commands."""
-    if len(sys.argv) < 2:
-        print_help()
-        sys.exit(1)
+    _ = os.environ.setdefault("DJANGO_SETTINGS_MODULE", __name__)
 
-    command = sys.argv[1]
+    try:
+        from django.core.management import ManagementUtility
+    except ImportError as exc:
+        raise ImportError(
+            (
+                "Couldn't import Django. Are you sure it's installed and "
+                "available on your PYTHONPATH environment variable? Did you "
+                "forget to activate a virtual environment?"
+            )
+        ) from exc
 
-    # Remove the command from sys.argv so scripts can parse remaining args
-    sys.argv = [sys.argv[0]] + sys.argv[2:]
-
-    match command:
-        case "help" | "--help" | "-h":
-            print_help()
-            sys.exit(0)
-        case _:
-            script_path = Path(__file__).parent / "scripts" / f"{command}.py"
-
-            if script_path.exists():
-                result = subprocess.run(
-                    # *: sys.argv[1:] now starts from the original sys.argv[2] since command was removed
-                    [sys.executable, str(script_path), command] + sys.argv[1:]
-                )
-                sys.exit(result.returncode)
-            else:
-                print(colored(f"❌ Script not found for command: {command}\n", "red"))
-                sys.exit(1)
-
-
-def print_help() -> None:
-    """Print available commands."""
-    print(colored("Tawala CLI", "cyan", attrs=["bold"]))
-    print("\nAvailable commands:")
-    # Create Project Command
-    print("\n" + colored("init [project-name]", "cyan", attrs=["bold"]))
-    print("  Usage: uvx tawala init my-project")
-    print("  Create / Initialize a new Tawala project")
-    # Get Random Secret Key Command
-    print("\n" + colored("generaterandom", "cyan", attrs=["bold"]))
-    print("  Usage: uvx tawala generaterandom")
-    print("  Generate a random string (suitable for Django SECRET_KEY)")
+    # Create the utility, set the custom program name, and execute
+    utility = ManagementUtility(sys.argv)
+    utility.prog_name = "tawala"
+    utility.execute()
 
 
 if __name__ == "__main__":
