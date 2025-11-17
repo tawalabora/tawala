@@ -1,0 +1,169 @@
+# SchoolTerm fixtures
+- model: app.schoolterm
+  pk: 1
+  fields:
+    name: TERM_1
+    order: 1
+- model: app.schoolterm
+  pk: 2
+  fields:
+    name: TERM_2
+    order: 2
+- model: app.schoolterm
+  pk: 3
+  fields:
+    name: TERM_3
+    order: 3
+# SchoolLevel fixtures
+- model: app.schoollevel
+  pk: 1
+  fields:
+    name: BEGINNER
+    alt_name: Butterfly
+    description: Introduction to learning
+    category: PRE_SCHOOL
+    order: 1
+- model: app.schoollevel
+  pk: 2
+  fields:
+    name: PP1
+    description: Pre-Primary 1 level
+    category: PRE_PRIMARY
+    order: 2
+- model: app.schoollevel
+  pk: 3
+  fields:
+    name: PP2
+    description: Pre-Primary 2 level
+    category: PRE_PRIMARY
+    order: 3
+- model: app.schoollevel
+  pk: 4
+  fields:
+    name: GRADE_1
+    description: Primary Grade 1
+    category: PRIMARY
+    order: 4
+- model: app.schoollevel
+  pk: 5
+  fields:
+    name: GRADE_2
+    description: Primary Grade 2
+    category: PRIMARY
+    order: 5
+- model: app.schoollevel
+  pk: 6
+  fields:
+    name: GRADE_3
+    description: Primary Grade 3
+    category: PRIMARY
+    order: 6
+# TermFee fixtures
+- model: app.termfee
+  pk: 1
+  fields:
+    school_level: 1 # BEGINNER
+    term: 1 # TERM_1
+    amount: "11500.00"
+- model: app.termfee
+  pk: 2
+  fields:
+    school_level: 1 # BEGINNER
+    term: 2 # TERM_2
+    amount: "12000.00"
+- model: app.termfee
+  pk: 3
+  fields:
+    school_level: 1 # BEGINNER
+    term: 3 # TERM_3
+    amount: "12500.00"
+- model: app.termfee
+  pk: 4
+  fields:
+    school_level: 2 # PP1
+    term: 1 # TERM_1
+    amount: "13000.00"
+- model: app.termfee
+  pk: 5
+  fields:
+    school_level: 2 # PP1
+    term: 2 # TERM_2
+    amount: "13500.00"
+- model: app.termfee
+  pk: 6
+  fields:
+    school_level: 2 # PP1
+    term: 3 # TERM_3
+    amount: "14000.00"
+- model: app.termfee
+  pk: 7
+  fields:
+    school_level: 3 # PP2
+    term: 1 # TERM_1
+    amount: "14500.00"
+- model: app.termfee
+  pk: 8
+  fields:
+    school_level: 3 # PP2
+    term: 2 # TERM_2
+    amount: "15000.00"
+- model: app.termfee
+  pk: 9
+  fields:
+    school_level: 3 # PP2
+    term: 3 # TERM_3
+    amount: "15500.00"
+- model: app.termfee
+  pk: 10
+  fields:
+    school_level: 4 # GRADE_1
+    term: 1 # TERM_1
+    amount: "16000.00"
+- model: app.termfee
+  pk: 11
+  fields:
+    school_level: 4 # GRADE_1
+    term: 2 # TERM_2
+    amount: "16500.00"
+- model: app.termfee
+  pk: 12
+  fields:
+    school_level: 4 # GRADE_1
+    term: 3 # TERM_3
+    amount: "17000.00"
+- model: app.termfee
+  pk: 13
+  fields:
+    school_level: 5 # GRADE_2
+    term: 1 # TERM_1
+    amount: "17500.00"
+- model: app.termfee
+  pk: 14
+  fields:
+    school_level: 5 # GRADE_2
+    term: 2 # TERM_2
+    amount: "18000.00"
+- model: app.termfee
+  pk: 15
+  fields:
+    school_level: 5 # GRADE_2
+    term: 3 # TERM_3
+    amount: "18500.00"
+- model: app.termfee
+  pk: 16
+  fields:
+    school_level: 6 # GRADE_3
+    term: 1 # TERM_1
+    amount: "19000.00"
+- model: app.termfee
+  pk: 17
+  fields:
+    school_level: 6 # GRADE_3
+    term: 2 # TERM_2
+    amount: "19500.00"
+- model: app.termfee
+  pk: 18
+  fields:
+    school_level: 6 # GRADE_3
+    term: 3 # TERM_3
+    amount: "20000.00"

@@ -1,3 +1,5 @@
-# uv & Python-generated files
-__pycache__/
+# Virtual environment
 .venv/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
