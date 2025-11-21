@@ -62,7 +62,7 @@ wheels = [
 
 [[package]]
 name = "djangx"
-version = "0.1.0.dev1"
+version = "0.1.0rc1"
 source = { editable = "." }
 dependencies = [
     { name = "django" },
