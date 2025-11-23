@@ -47,45 +47,31 @@ jobs:
           TAG=""
           TYPE="unknown"
 
-          # BASH_REMATCH explanation:
-          # ${BASH_REMATCH[1]} is the Base Version (X.Y.Z)
-          # ${BASH_REMATCH[2]} is the Suffix Number (1, 2, 3...)
-
           if [[ "$VERSION" =~ ^([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
-            # Stable: 1.0.2 -> v1.0.2
             TYPE="stable"
-            TAG="v$VERSION"
 
           elif [[ "$VERSION" =~ ^([0-9]+\.[0-9]+\.[0-9]+)a([0-9]+)$ ]]; then
-            # Alpha: 1.0.2a1 -> v1.0.2-alpha.1
             TYPE="alpha"
-            TAG="v${BASH_REMATCH[1]}-alpha.${BASH_REMATCH[2]}"
 
           elif [[ "$VERSION" =~ ^([0-9]+\.[0-9]+\.[0-9]+)b([0-9]+)$ ]]; then
-            # Beta: 1.0.2b1 -> v1.0.2-beta.1
             TYPE="beta"
-            TAG="v${BASH_REMATCH[1]}-beta.${BASH_REMATCH[2]}"
 
           elif [[ "$VERSION" =~ ^([0-9]+\.[0-9]+\.[0-9]+)rc([0-9]+)$ ]]; then
-            # RC: 1.0.2rc1 -> v1.0.2-rc.1
             TYPE="rc"
-            TAG="v${BASH_REMATCH[1]}-rc.${BASH_REMATCH[2]}"
 
           elif [[ "$VERSION" =~ ^([0-9]+\.[0-9]+\.[0-9]+)(\.?)post([0-9]+)$ ]]; then
-            # Post: 1.0.2.post1 -> v1.0.2-post.1 (Handles optional dot)
             TYPE="post"
-            TAG="v${BASH_REMATCH[1]}-post.${BASH_REMATCH[3]}"
 
           elif [[ "$VERSION" =~ ^([0-9]+\.[0-9]+\.[0-9]+)(\.?)dev([0-9]+)$ ]]; then
-            # Dev: 1.0.2.dev1 -> v1.0.2-dev.1 (Handles optional dot)
             TYPE="dev"
-            TAG="v${BASH_REMATCH[1]}-dev.${BASH_REMATCH[3]}"
           fi
 
           if [[ "$TYPE" == "unknown" ]]; then
             echo "Error: Could not parse version format: $VERSION"
             exit 1
           fi
+
+          TAG="v$VERSION"
 
           echo "Calculated TYPE: $TYPE"
           echo "Calculated TAG: $TAG"
