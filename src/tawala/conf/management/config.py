@@ -1,43 +1,41 @@
 import os
 import tomllib
+from importlib.metadata import version
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from .fields import BaseConfField, ConfField
 from .path import BaseDirectory, get_base_dir_or_exit
-from .types import KeyType, TomlSectionType, ValueType
 
 
 class BaseConfig:
     """Base configuration class that handles loading from environment variables and TOML files."""
 
-    _toml_data: Dict[str, ValueType] = {}
-    _config_specs = {}
+    _toml_data: dict[str, Any] = {}
+    _config_specs: dict[str, dict[str, Any]] = {}
 
     @classmethod
     def _load_toml(
         cls,
         toml_path: Optional[Path] = None,
-        section: TomlSectionType = None,
+        section: Optional[str] = None,
     ) -> None:
         """Load TOML configuration from pyproject.toml file."""
         if toml_path is None:
-            # * Ensure that the validation of base_dir has already occurred
-            toml_path = BaseDirectory.get_cached_base_dir() / "pyproject.toml"
+            # * Base directory must have already been validated, which it should be in Tawala class
+            base_dir = BaseDirectory.get_cached_base_dir()
+            if base_dir is not None:
+                toml_path = base_dir / "pyproject.toml"
 
-        if toml_path.exists():
+        if toml_path is not None and toml_path.exists() and toml_path.is_file():
             with toml_path.open("rb") as f:
-                all_data = tomllib.load(f)
+                all_data: dict[str, Any] = tomllib.load(f)
 
             if section:
-                data: Any = all_data
+                data: dict[str, Any] = all_data
                 for key in section.split("."):
-                    if isinstance(data, dict):
-                        data = data.get(key, {})
-                    else:
-                        data = {}
-                        break
-                cls._toml_data = data if isinstance(data, dict) else {}
+                    data = data.get(key, {})
+                cls._toml_data = data
             else:
                 cls._toml_data = {}
         else:
@@ -46,9 +44,9 @@ class BaseConfig:
     @classmethod
     def _get_from_toml(
         cls,
-        key: KeyType,
-        section: TomlSectionType = "tool.tawala",
-        default: ValueType = None,
+        key: Optional[str],
+        section: Optional[str] = "tool.tawala",
+        default: Any = None,
     ) -> Any:
         """
         Get value from TOML configuration.
@@ -80,11 +78,11 @@ class BaseConfig:
     @classmethod
     def _fetch_value(
         cls,
-        env_key: KeyType = None,
-        toml_key: KeyType = None,
-        default: ValueType = None,
-        toml_section: TomlSectionType = "tool.tawala",
-    ) -> ValueType:
+        env_key: Optional[str] = None,
+        toml_key: Optional[str] = None,
+        default: Any = None,
+        toml_section: Optional[str] = "tool.tawala",
+    ) -> Any:
         """
         Fetch configuration value with fallback priority: ENV -> TOML -> default.
 
@@ -131,22 +129,18 @@ class BaseConfig:
             cls._config_specs[attr_name] = config_dict
 
             # Create property getter
-            def make_getter(name: str, cfg: Dict[str, Any], field: BaseConfField):
+            def make_getter(name: str, cfg: dict[str, Any], field: BaseConfField):
                 def getter(self: "BaseConfig") -> Any:
                     env_key = cfg["env"]
                     toml_key = cfg["toml"]
                     default = cfg["default"]
                     raw_value = self._fetch_value(env_key, toml_key, default)
 
-                    # ? What if raw_value is None?
-
                     # Convert to the appropriate type
-                    # ? Will it bring problems here?
-                    return field._convert_value(raw_value)
+                    return field.convert_value(raw_value)
 
                 return getter
 
-            # ?: Can this handle situaltions where the raw_value is None?
             setattr(
                 cls,
                 attr_name,
@@ -154,9 +148,41 @@ class BaseConfig:
             )
 
     @classmethod
-    def list_env_keys(cls):
+    def list_env_keys(cls) -> list[str]:
         """List all environment variable keys used by this config class."""
-        pass
+        return [
+            spec["env"]
+            for spec in cls._config_specs.values()
+            if spec.get("env") is not None
+        ]
+
+    @classmethod
+    def get_env_var_info(cls) -> list[dict[str, Any]]:
+        """
+        Get detailed information about all environment variables in this config class.
+
+        Returns:
+            List of dictionaries containing:
+                - env_key: Environment variable name
+                - toml_key: Corresponding TOML key path
+                - default: Default value if any
+                - name: Field name in the config class
+        """
+        vars_info: list[dict[str, Any]] = []
+
+        for var_name, spec in cls._config_specs.items():
+            env_key = spec.get("env")
+            if env_key:  # Only include if it has an env key
+                vars_info.append(
+                    {
+                        "env_key": env_key,
+                        "toml_key": spec.get("toml"),
+                        "default": spec.get("default"),
+                        "name": var_name,
+                    }
+                )
+
+        return vars_info
 
 
 class SecurityConfig(BaseConfig):
@@ -259,6 +285,7 @@ class Tawala:
             # Not yet checked (ASGI/WSGI context) - check now or exit
             self.base_dir = get_base_dir_or_exit()
 
+        self.version: str = version("tawala")
         self.security = SecurityConfig()
         self.apps = ApplicationConfig()
         self.db = DatabaseConfig()

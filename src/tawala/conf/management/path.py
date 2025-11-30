@@ -71,5 +71,5 @@ def get_base_dir_or_exit() -> Path:
 
         from django.core.management.color import color_style
 
-        print(color_style().ERROR(e))
+        print(color_style().ERROR(str(e)))
         sys.exit(1)

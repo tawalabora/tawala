@@ -6,8 +6,6 @@ from tawala.core.management.utils import (
     to_str_if_value_else_empty_str,
 )
 
-from .types import KeyType, ValueType
-
 
 class BaseConfField:
     """
@@ -33,7 +31,7 @@ class BaseConfField:
         """
         raise NotImplementedError("Subclasses must implement to_dict()")
 
-    def _convert_value(self, value: Any) -> Any:
+    def convert_value(self, value: Any) -> Any:
         """
         Convert the raw value to the appropriate type based on field name.
 
@@ -88,9 +86,9 @@ class ConfField(BaseConfField):
 
     def __init__(
         self,
-        env: KeyType = None,
-        toml: KeyType = None,
-        default: ValueType = None,
+        env: Optional[str] = None,
+        toml: Optional[str] = None,
+        default: Any = None,
     ):
         super().__init__()
         self.env = env
