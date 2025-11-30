@@ -1,4 +1,4 @@
-from typing import Any, Iterable, Tuple
+from typing import Any, Callable, Iterable, Optional, Tuple, cast
 
 
 def calculate_max_length_from_choices(choices: Iterable[Tuple[str, Any]]) -> int:
@@ -42,7 +42,9 @@ def to_bool(value: Any) -> bool:
     return bool(value)
 
 
-def to_list_of_str(value: Any, transform: callable = None) -> list[str]:
+def to_list_of_str(
+    value: Any, transform: Optional[Callable[[str], str]] = None
+) -> list[str]:
     """
     Convert a value to a list of strings, with optional transformation.
 
@@ -53,18 +55,24 @@ def to_list_of_str(value: Any, transform: callable = None) -> list[str]:
     Returns:
         list[str]: The converted list of strings.
     """
+    result: list[str] = []
+
     if isinstance(value, list):
-        result = [str(item) for item in value]
+        # Cast to list[Any] to help type checker understand iteration
+        list_value = cast(list[Any], value)
+        result = [str(item) for item in list_value]
     elif isinstance(value, str):
         result = [item.strip() for item in value.split(",") if item.strip()]
-    else:
-        return []
+
     if transform:
         result = [transform(item) for item in result]
+
     return result
 
 
-def to_str_if_value_else_empty_str(value: Any, transform: callable = None) -> str:
+def to_str_if_value_else_empty_str(
+    value: Any, transform: Optional[Callable[[str], str]] = None
+) -> str:
     """
     Ensure the value is a string, with optional transformation.
 

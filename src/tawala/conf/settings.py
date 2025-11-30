@@ -6,6 +6,8 @@ from .management.config import Tawala
 
 T = Tawala()
 
+TAWALA_VERSION = T.version
+
 # ==============================================================================
 # Directories
 # ==============================================================================
@@ -41,7 +43,7 @@ ASGI_APPLICATION = "tawala.conf.asgi.application"
 WSGI_APPLICATION = "tawala.conf.wsgi.application"
 BUILD_COMMANDS = T.build.commands
 
-INSTALLED_APPS = [
+INSTALLED_APPS: list[str] = [
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
