@@ -1,11 +1,14 @@
-# Ignore Python bytecode files
+# Python bytecode files
 __pycache__/
 
-# Ignore virtual environment folder
+# Virtual environment folder
 /.venv/
 
-# Ignore distribution/build folders
+# Distribution/build folder
 /dist/
 
-# Keep your temporary files here
+# Tailwind CSS generated file
+/src/tawala/ui/static/tawala/css/output.css
+
+# Temporary files
 /.tmp/

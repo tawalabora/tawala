@@ -1,0 +1,21 @@
+{% load tawala static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    {% page_title %}
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+    <meta name="author" content="" />
+    <link rel="stylesheet" href="{% static 'tawala/css/output.css' %}" />
+    {% block head %}
+    {% endblock head %}
+  </head>
+  <body>
+    <main>
+      {% block main %}
+      {% endblock main %}
+    </main>
+  </body>
+</html>

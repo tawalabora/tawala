@@ -1,46 +1,61 @@
+from typing import TYPE_CHECKING, Any, Literal, Optional
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from .types import ProjectDirsSetting
+
 from importlib.metadata import version
-from typing import Any
 
 from django.utils.csp import CSP  # type: ignore[reportMissingTypeStubs]
 
-from .management import config, path
+from . import config
+from .base import Project
+from .checks import CLISetup
+
+TAWALA_VERSION = version("tawala")
+
+
+# ==============================================================================
+# Initialization
+# ==============================================================================
+
+BASE_DIR: Optional[Path] = (
+    Project.get_base_dir() if CLISetup.is_successful else Project.get_base_dir_or_exit()
+)
+
+assert BASE_DIR is not None, (
+    "BASE_DIR should have already been validated and set. "
+    "To use the base directory path, preferably get it from PROJECT_DIRS['BASE'] "
+    "and not from BASE_DIR setting.\n"
+    "If using any 'Project' classmethods, "
+    "be sure that you have used 'Project.get_base_dir_exit()' "
+    "before using any other of its methods."
+)
+
+PROJECT_DIRS: ProjectDirsSetting = {
+    "BASE": BASE_DIR,
+    "APP": BASE_DIR / "app",
+    "API": BASE_DIR / "api",
+    "PUBLIC": BASE_DIR / "public",
+    "CLI": BASE_DIR / ".cli",
+    "PACKAGE": Project.tawala_package_dir,
+}
 
 
 class Tawala:
     """Main configuration class that orchestrates settings."""
 
     def __init__(self):
-        cached_base_dir = path.BasePath.get_cached_base_dir()
-
-        if cached_base_dir is not None:
-            # Already checked by CLI - reuse the cached value
-            self.base_dir = cached_base_dir
-        else:
-            # Not yet checked (ASGI/WSGI context) - check now or exit
-            self.base_dir = path.BasePath.get_base_dir_or_exit()
-
-        self.version: str = version("tawala")
         self.security = config.SecurityConfig()
         self.apps = config.ApplicationConfig()
-        self.db = config.DatabaseConfig()
+        self.database = config.DatabaseConfig()
         self.storage = config.StorageConfig()
-        self.build = config.BuildConfig()
+        self.tailwind_cli = config.TailwindCLIConfig()
+        self.commands = config.CommandsConfig()
 
 
 T = Tawala()
-
-TAWALA_VERSION = T.version
-
-# ==============================================================================
-# Directories
-# ==============================================================================
-
-BASE_DIR = T.base_dir
-assert BASE_DIR is not None, "BASE_DIR should have already been validated and cached."
-
-API_DIR = BASE_DIR / "api"
-APP_DIR = BASE_DIR / "app"
-PUBLIC_DIR = BASE_DIR / "public"
 
 
 # ==============================================================================
@@ -48,10 +63,11 @@ PUBLIC_DIR = BASE_DIR / "public"
 # See https://docs.djangoproject.com/en/stable/howto/deployment/checklist/
 # ==============================================================================
 
-SECRET_KEY = T.security.secret_key
-DEBUG = T.security.debug
-ALLOWED_HOSTS = T.security.allowed_hosts
+SECRET_KEY: str = T.security.secret_key
+DEBUG: bool = T.security.debug
+ALLOWED_HOSTS: list[str] = T.security.allowed_hosts
 
+# Production security settings
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
@@ -63,9 +79,9 @@ if not DEBUG:
 # Application definition
 # ==============================================================================
 
-ROOT_URLCONF = "tawala.conf.urls"
-ASGI_APPLICATION = "tawala.conf.asgi.application"
-WSGI_APPLICATION = "tawala.conf.wsgi.application"
+ROOT_URLCONF = "tawala.conf.management.app.urls"
+ASGI_APPLICATION = "tawala.conf.management.api.asgi.application"
+WSGI_APPLICATION = "tawala.conf.management.api.wsgi.application"
 
 INSTALLED_APPS: list[str] = [
     "django.contrib.admin",
@@ -76,13 +92,13 @@ INSTALLED_APPS: list[str] = [
     "django.contrib.staticfiles",
     "django_browser_reload",
     "django_watchfiles",
-    "tawala.components",
-    "tawala.core",
+    "tawala.utils",
+    "tawala.ui",
     *T.apps.configured_apps,
     "app",
 ]
 
-MIDDLEWARE = [
+MIDDLEWARE: list[str] = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -110,51 +126,83 @@ TEMPLATES: list[dict[str, Any]] = [
     },
 ]
 
-BUILD = {"commands": T.build.commands}
+
+# ==============================================================================
+# Commands
+# ==============================================================================
+
+COMMANDS_INSTALL: list[str] = T.commands.install
+
+COMMANDS_BUILD: list[str] = T.commands.build
 
 
 # ==============================================================================
-# Database
+# Database Configuration
 # https://docs.djangoproject.com/en/dev/ref/databases/#postgresql-notes
 # https://www.postgresql.org/docs/current/libpq-pgservice.html
 # https://www.postgresql.org/docs/current/libpq-pgpass.html
 # ==============================================================================
 
-DBCONF = {
-    "USER": T.db.user,
-    "PASSWORD": T.db.password,
-    "NAME": T.db.name,
-    "HOST": T.db.host,
-    "PORT": T.db.port,
+
+def _get_database_config() -> dict[str, dict[str, Any]]:
+    """Generate database configuration based on backend type."""
+    backend = T.database.backend.lower()
+
+    match backend:
+        case "sqlite" | "sqlite3":
+            return {
+                "default": {
+                    "ENGINE": "django.db.backends.sqlite3",
+                    "NAME": PROJECT_DIRS["BASE"] / "db.sqlite3",
+                }
+            }
+
+        case "postgresql" | "postgres" | "psql" | "pgsql" | "pg" | "psycopg":
+            options = {"pool": T.database.pool, "sslmode": T.database.ssl_mode}
+
+            # Add service or connection vars
+            if T.database.use_vars:
+                config = {
+                    "USER": T.database.user,
+                    "PASSWORD": T.database.password,
+                    "NAME": T.database.name,
+                    "HOST": T.database.host,
+                    "PORT": T.database.port,
+                }
+            else:
+                options["service"] = T.database.service
+                config = {}
+
+            return {
+                "default": {
+                    "ENGINE": "django.db.backends.postgresql",
+                    "OPTIONS": options,
+                    **config,
+                }
+            }
+
+        case _:
+            raise ValueError(f"Unsupported DB backend: {backend}")
+
+
+DATABASES = _get_database_config()
+
+
+# ==============================================================================
+# Tailwind CSS
+# ==============================================================================
+
+TAILWIND_CLI: dict[str, Any] = {
+    "PATH": T.tailwind_cli.path,
+    "VERSION": T.tailwind_cli.version,
+    "CSS": {
+        "input": str(PROJECT_DIRS["APP"] / "static" / "app" / "css" / "input.css"),
+        "output": str(
+            PROJECT_DIRS["PACKAGE"] / "ui" / "static" / "tawala" / "css" / "output.css"
+        ),
+    },
 }
 
-db_config: dict[str, dict[str, Any]]
-
-match T.db.backend:
-    case "sqlite" | "sqlite3":  # Default
-        db_config = {
-            "default": {
-                "ENGINE": "django.db.backends.sqlite3",
-                "NAME": BASE_DIR / "db.sqlite3",
-            }
-        }
-    case "postgresql" | "postgres" | "psql" | "pgsql" | "pg" | "psycopg":
-        PG_SERVICE = {"service": T.db.service}
-        db_config = {
-            "default": {
-                "ENGINE": "django.db.backends.postgresql",
-                **(DBCONF if T.db.use_vars else {}),
-                "OPTIONS": {
-                    **(PG_SERVICE if not T.db.use_vars else {}),
-                    "pool": T.db.pool,
-                    "sslmode": T.db.ssl_mode,
-                },
-            }
-        }
-    case _:
-        raise ValueError(f"Unsupported DB backend: {T.db.backend}")
-
-DATABASES = db_config
 
 # ==============================================================================
 # Static files (CSS, JavaScript, Images)
@@ -162,12 +210,7 @@ DATABASES = db_config
 # ==============================================================================
 
 STATIC_URL = "/static/"
-STATIC_ROOT = PUBLIC_DIR / "static"
-STATICFILES_BACKEND = {
-    "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-    }
-}
+STATIC_ROOT: Path = PROJECT_DIRS["PUBLIC"] / "static"
 
 
 # ==============================================================================
@@ -176,28 +219,36 @@ STATICFILES_BACKEND = {
 # https://docs.djangoproject.com/en/dev/ref/settings/#media-files
 # ==============================================================================
 
-match T.storage.backend:
-    case "filesystem" | "local" | "fs":  # Default
-        storage_config = {
-            "default": {
-                "BACKEND": "django.core.files.storage.FileSystemStorage",
-            },
-            **STATICFILES_BACKEND,
-        }
-        MEDIA_URL = "/media/"
-        MEDIA_ROOT = PUBLIC_DIR / "media"
-    case "vercel" | "vercelblob" | "vercel_blob" | "vercel-blob":
-        storage_config = {
-            "default": {
-                "BACKEND": "tawala.core.backends.storage.VercelBlobStorage",
-            },
-            **STATICFILES_BACKEND,
-        }
-    case _:
-        raise ValueError(f"Unsupported storage backend: {T.storage.backend}")
 
-STORAGES = storage_config
-STORAGE_TOKEN = T.storage.token
+def _get_storage_config() -> dict[str, Any]:
+    """Generate storage configuration based on backend type."""
+    backend = T.storage.backend.lower()
+
+    base_config: dict[str, dict[str, str] | str] = {
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+        "token": T.storage.token,
+    }
+
+    match backend:
+        case "filesystem" | "local" | "fs":
+            storage_backend = "django.core.files.storage.FileSystemStorage"
+            global MEDIA_URL, MEDIA_ROOT
+            MEDIA_URL = "/media/"
+            MEDIA_ROOT = PROJECT_DIRS["PUBLIC"] / "media"
+
+        case "vercel" | "vercelblob" | "vercel_blob" | "vercel-blob":
+            storage_backend = "tawala.utils.backends.storage.VercelBlobStorage"
+
+        case _:
+            raise ValueError(f"Unsupported storage backend: {backend}")
+
+    base_config["default"] = {"BACKEND": storage_backend}
+    return base_config
+
+
+STORAGES = _get_storage_config()
 
 
 # ==============================================================================
@@ -216,19 +267,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#auth-password-validators
 # ==============================================================================
 
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+AUTH_PASSWORD_VALIDATORS: list[dict[Literal["NAME"], str]] = [
+    {"NAME": f"django.contrib.auth.password_validation.{validator}"}
+    for validator in [
+        "UserAttributeSimilarityValidator",
+        "MinimumLengthValidator",
+        "CommonPasswordValidator",
+        "NumericPasswordValidator",
+    ]
 ]
 
 
@@ -237,7 +283,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/dev/howto/csp/
 # ==============================================================================
 
-SECURE_CSP = {
+SECURE_CSP: dict[str, list[str]] = {
     "default-src": [CSP.SELF],
     "script-src": [CSP.SELF, CSP.NONCE],
     # Example of the less secure 'unsafe-inline' option.

@@ -615,19 +615,19 @@ wheels = [
 
 [[package]]
 name = "tawala"
-version = "1.0.5.dev2"
+version = "1.0.6.dev9"
 source = { editable = "." }
 dependencies = [
     { name = "django" },
     { name = "django-browser-reload" },
     { name = "django-watchfiles" },
-    { name = "pillow" },
     { name = "pyperclip" },
 ]
 
 [package.dev-dependencies]
 dev = [
     { name = "djlint" },
+    { name = "pillow" },
     { name = "psycopg", extra = ["binary", "pool"] },
     { name = "vercel" },
 ]
@@ -637,13 +637,13 @@ requires-dist = [
     { name = "django", specifier = ">=6.0rc1" },
     { name = "django-browser-reload", specifier = ">=1.21.0" },
     { name = "django-watchfiles", specifier = ">=1.4.0" },
-    { name = "pillow", specifier = ">=12.0.0" },
     { name = "pyperclip", specifier = ">=1.11.0" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "djlint", specifier = ">=1.36.4" },
+    { name = "pillow", specifier = ">=12.0.0" },
     { name = "psycopg", extras = ["binary", "pool"], specifier = ">=3.2.13" },
     { name = "vercel", specifier = ">=0.3.5" },
 ]

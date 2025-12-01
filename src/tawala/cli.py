@@ -7,18 +7,31 @@ Provides the management commands interface for Tawala.
 
 import os
 import sys
+from typing import NoReturn, Optional
 
 from django.core.management import ManagementUtility
 
-from .conf.management.path import BasePath
+from .conf.base import Project
+from .conf.checks import CLISetup
 
 
-def main() -> None:
+def main() -> Optional[NoReturn]:
     """Main entry point for the Tawala CLI."""
 
-    base_dir = BasePath.get_base_dir_or_exit()
+    match sys.argv[1]:
+        case "-v" | "--version" | "version":
+            from importlib.metadata import version
+
+            print(version("tawala"))
+            sys.exit(0)
+
+        case _:
+            pass
+
+    base_dir = Project.get_base_dir_or_exit()
     sys.path.insert(0, str(base_dir))
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tawala.conf.settings")
+    CLISetup.setsuccessful()
 
     utility = ManagementUtility(sys.argv)
     utility.prog_name = "tawala"

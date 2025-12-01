@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "tawala"
-version = "1.0.5.dev2"
+version = "1.0.6.dev9"
 description = ""
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -14,7 +14,6 @@ dependencies = [
     "django>=6.0rc1",
     "django-browser-reload>=1.21.0",
     "django-watchfiles>=1.4.0",
-    "pillow>=12.0.0",
     "pyperclip>=1.11.0",
 ]
 
@@ -27,11 +26,15 @@ issues = "https://github.com/tawalabora/tawala/issues"
 tawala = "tawala.cli:main"
 
 [dependency-groups]
-dev = ["djlint>=1.36.4", "psycopg[binary,pool]>=3.2.13", "vercel>=0.3.5"]
+dev = [
+    "djlint>=1.36.4",
+    "pillow>=12.0.0",
+    "psycopg[binary,pool]>=3.2.13",
+    "vercel>=0.3.5",
+]
 
 [tool.djlint]
 ignore = "H016"
-blank_line_after_tag = "load,extends"
 
 [[tool.uv.index]]
 name = "testpypi"
