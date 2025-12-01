@@ -41,7 +41,6 @@ if not DEBUG:
 ROOT_URLCONF = "tawala.conf.urls"
 ASGI_APPLICATION = "tawala.conf.asgi.application"
 WSGI_APPLICATION = "tawala.conf.wsgi.application"
-BUILD_COMMANDS = T.build.commands
 
 INSTALLED_APPS: list[str] = [
     "django.contrib.admin",
@@ -85,6 +84,8 @@ TEMPLATES: list[dict[str, Any]] = [
         },
     },
 ]
+
+BUILD = {"commands": T.build.commands}
 
 
 # ==============================================================================

@@ -1,6 +1,16 @@
-"""Management command: dev"""
+"""Management command: dev
 
-from enum import IntEnum
+Tawala development server with an enhanced user experience. Extends Django's
+runserver command with ASCII art, formatted output, local/network URLs,
+timezone information, and optional clipboard integration.
+
+Example:
+    tawala dev
+    tawala dev 8001
+    tawala dev --no-clipboard
+    tawala dev 0.0.0.0:9000 --no-clipboard
+"""
+
 from typing import Any
 
 from django.conf import settings
@@ -9,15 +19,44 @@ from django.contrib.staticfiles.management.commands.runserver import (
 )
 from django.core.management.base import CommandParser
 
-
-class TerminalSize(IntEnum):
-    """Terminal size threshold for ASCII art."""
-
-    THRESHOLD = 60
+from ..arts import get_dev_art
+from ..enums import TerminalSize
 
 
 class Command(RunserverCommand):
-    """Tawala development server."""
+    """Tawala development server with enhanced UX.
+
+    Extends Django's runserver command with the following features:
+    - Colorful ASCII art banner
+    - Server address and version information
+    - Current date and timezone display
+    - Local network address detection
+    - Optional clipboard integration for server URL
+    - Terminal-responsive output (adapts to terminal width)
+
+    Attributes:
+        help: Command description.
+        version: Tawala version from Django settings or default.
+        _raw_ipv6: Whether the address is raw IPv6 format.
+        addr: Server address.
+        port: Server port.
+        protocol: HTTP protocol (http/https).
+        use_ipv6: Whether to use IPv6.
+        no_clipboard: Whether to disable clipboard copying.
+
+    Examples:
+        # Start development server on default address
+        tawala dev
+
+        # Start on specific port
+        tawala dev 8001
+
+        # Disable clipboard copying
+        tawala dev --no-clipboard
+
+        # Start on specific address and port
+        tawala dev 0.0.0.0:9000 --no-clipboard
+    """
 
     help = "Tawala development server"
 
@@ -29,8 +68,14 @@ class Command(RunserverCommand):
     use_ipv6: bool
     version: str = getattr(settings, "TAWALA_VERSION", "X.X.X")
 
-    def add_arguments(self, parser: CommandParser):
-        """Add custom arguments to the command."""
+    def add_arguments(self, parser: CommandParser) -> None:
+        """Add custom arguments to the command.
+
+        Extends the parent runserver arguments with Tawala-specific options.
+
+        Args:
+            parser: The argument parser to add arguments to.
+        """
         super().add_arguments(parser)
         parser.add_argument(
             "--no-clipboard",
@@ -39,15 +84,29 @@ class Command(RunserverCommand):
         )
 
     def handle(self, *args: object, **options: Any) -> str | None:
-        """Handle the dev command."""
+        """Handle the dev command execution.
+
+        Processes command options and invokes the parent runserver command.
+
+        Args:
+            *args: Positional arguments from the command.
+            **options: Command options including:
+                - no_clipboard (bool): If True, skip clipboard copying.
+
+        Returns:
+            Result from parent command or None.
+        """
         self.no_clipboard = options.get("no_clipboard", False)
         return super().handle(*args, **options)
 
-    def check_migrations(self):
-        """
-        * OVERRIDDEN - django.core.management.base.BaseCommand.check_migrations
-        Print a warning if the set of migrations on disk don't match the
-        migrations in the database.
+    def check_migrations(self) -> None:
+        """Check for unapplied migrations and display a warning.
+
+        Overrides Django's default check_migrations to use 'tawala migrate'
+        instead of 'python manage.py migrate' in the warning message.
+
+        Prints a notice if there are unapplied migrations that could affect
+        the project's functionality.
         """
         from django.core.exceptions import ImproperlyConfigured
         from django.db import DEFAULT_DB_ALIAS, connections
@@ -78,7 +137,16 @@ class Command(RunserverCommand):
             self.stdout.write(self.style.NOTICE("Run 'tawala migrate' to apply them."))
 
     def on_bind(self, server_port: int) -> None:
-        """Custom server startup message."""
+        """Custom server startup message and initialization.
+
+        Overrides Django's default on_bind to provide a custom startup
+        banner, server information, and clipboard functionality.
+        Called when the development server binds to a port. Displays startup
+        banner, server information, and optionally copies the URL to clipboard.
+
+        Args:
+            server_port: The port the server is bound to.
+        """
         self._print_startup_banner()
         self._print_server_info(server_port)
 
@@ -88,41 +156,18 @@ class Command(RunserverCommand):
         self.stdout.write("")  # spacing
 
     def _print_startup_banner(self) -> None:
-        """Print ASCII banner based on terminal width."""
+        """Print ASCII banner based on terminal width.
+
+        Displays either a full ASCII art banner or a compact version depending
+        on whether the terminal is wide enough. Includes warning messages and
+        control instructions appropriate for the terminal size.
+        """
         import shutil
 
         self.stdout.write(self.style.SUCCESS("\n✨ Starting dev server...") + "\n")
 
         terminal_width = shutil.get_terminal_size(fallback=(80, 24)).columns
-
-        if terminal_width >= TerminalSize.THRESHOLD:
-            art_lines = [
-                "",
-                "  ████████╗ █████╗ ██╗    ██╗ █████╗ ██╗      █████╗ ",
-                "  ╚══██╔══╝██╔══██╗██║    ██║██╔══██╗██║     ██╔══██╗",
-                "     ██║   ███████║██║ █╗ ██║███████║██║     ███████║",
-                "     ██║   ██╔══██║██║███╗██║██╔══██║██║     ██╔══██║",
-                "     ██║   ██║  ██║╚███╔███╔╝██║  ██║███████╗██║  ██║",
-                "     ╚═╝   ╚═╝  ╚═╝ ╚══╝╚══╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝",
-                "",
-                "        ██████╗ ███████╗██╗   ██╗",
-                "        ██╔══██╗██╔════╝██║   ██║",
-                "        ██║  ██║█████╗  ██║   ██║",
-                "        ██║  ██║██╔══╝  ╚██╗ ██╔╝",
-                "        ██████╔╝███████╗ ╚████╔╝ ",
-                "        ╚═════╝ ╚══════╝  ╚═══╝  ",
-                "",
-            ]
-        else:
-            art_lines = [
-                "",
-                "  ▀█▀ ▄▀█ █░█░█ ▄▀█ █░░ ▄▀█",
-                "  ░█░ █▀█ ▀▄▀▄▀ █▀█ █▄▄ █▀█",
-                "",
-                "       █▀▄ █▀▀ █░█",
-                "       █▄▀ ██▄ ▀▄▀",
-                "",
-            ]
+        art_lines = get_dev_art(terminal_width)
 
         for line in art_lines:
             self.stdout.write(self.style.HTTP_INFO(line))
@@ -143,7 +188,14 @@ class Command(RunserverCommand):
         self.stdout.write("")
 
     def _print_server_info(self, server_port: int) -> None:
-        """Print server and version info."""
+        """Print server and version information.
+
+        Displays the current date/time with timezone, Tawala version,
+        local server address, and network address (if applicable).
+
+        Args:
+            server_port: The port the server is bound to.
+        """
         from django.utils import timezone
 
         tz = timezone.get_current_timezone()
@@ -170,7 +222,14 @@ class Command(RunserverCommand):
             self._print_network_url(server_port)
 
     def _format_address(self) -> str:
-        """Format address display."""
+        """Format address for display.
+
+        Handles IPv6 addresses by wrapping them in brackets and formats
+        0.0.0.0 for display.
+
+        Returns:
+            The formatted address string ready for display.
+        """
         if self._raw_ipv6:
             return f"[{self.addr}]"
         elif self.addr == "0":
@@ -179,7 +238,15 @@ class Command(RunserverCommand):
             return self.addr
 
     def _print_network_url(self, server_port: int) -> None:
-        """Print LAN IP if possible."""
+        """Print LAN IP address if available.
+
+        Attempts to determine the local network IP address and displays
+        the network URL for accessing the dev server from other machines
+        on the same network. Silently fails if the address cannot be determined.
+
+        Args:
+            server_port: The port the server is bound to.
+        """
         import socket
 
         try:
@@ -193,7 +260,14 @@ class Command(RunserverCommand):
             pass
 
     def _copy_to_clipboard(self, server_port: int) -> None:
-        """Copy URL to clipboard."""
+        """Copy server URL to clipboard.
+
+        Attempts to copy the server URL to the system clipboard using pyperclip.
+        Gracefully handles missing pyperclip or clipboard unavailability.
+
+        Args:
+            server_port: The port the server is bound to.
+        """
         try:
             import pyperclip
 
