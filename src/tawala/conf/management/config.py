@@ -266,7 +266,7 @@ class BuildConfig(BaseConfig):
 
     commands = ConfField(
         env="BUILD_COMMANDS",
-        toml="build-commands",
+        toml="build.commands",
     )
 
 
