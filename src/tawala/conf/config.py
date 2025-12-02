@@ -34,11 +34,12 @@ class DatabaseConfig(base.Config):
     backend = base.ConfField(
         env="DB_BACKEND",
         toml="db.backend",
-        default="sqlite3",
+        default="postgresql",
     )
     service = base.ConfField(
         env="DB_SERVICE",
         toml="db.service",
+        default="tawala-app"
     )
     pool = base.ConfField(
         env="DB_POOL",

@@ -128,15 +128,7 @@ def _get_database_config() -> dict[str, dict[str, Any]]:
     backend = T.database.backend.lower()
 
     match backend:
-        case "sqlite" | "sqlite3":
-            return {
-                "default": {
-                    "ENGINE": "django.db.backends.sqlite3",
-                    "NAME": BASE_DIR / "db.sqlite3",
-                }
-            }
-
-        case "postgresql" | "postgres" | "psql" | "pgsql" | "pg" | "psycopg":
+        case "postgresql" | "postgres" | "psql" | "pgsql" | "pg" | "psycopg":  # Default
             options: dict[str, Any] = {
                 "pool": T.database.pool,
                 "sslmode": T.database.ssl_mode,
@@ -160,6 +152,14 @@ def _get_database_config() -> dict[str, dict[str, Any]]:
                     "ENGINE": "django.db.backends.postgresql",
                     "OPTIONS": options,
                     **config,
+                }
+            }
+
+        case "sqlite" | "sqlite3":
+            return {
+                "default": {
+                    "ENGINE": "django.db.backends.sqlite3",
+                    "NAME": BASE_DIR / "db.sqlite3",
                 }
             }
 
@@ -212,7 +212,7 @@ def _get_storage_config() -> dict[str, Any]:
     }
 
     match backend:
-        case "filesystem" | "local" | "fs":
+        case "filesystem" | "local" | "fs":  # Default
             storage_backend = "django.core.files.storage.FileSystemStorage"
             global MEDIA_URL, MEDIA_ROOT
             MEDIA_URL = "/media/"
