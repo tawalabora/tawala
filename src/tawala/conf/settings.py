@@ -175,11 +175,11 @@ DATABASES = _get_database_config()
 # ==============================================================================
 
 TAILWIND_CLI: dict[str, Any] = {
-    "PATH": T.tailwind_cli.path,
+    "PATH": T.tailwind_cli.path if T.tailwind_cli.path else CLI_DIR / "tailwindcss",
     "VERSION": T.tailwind_cli.version,
     "CSS": {
-        "input": str(APP_DIR / "static" / "app" / "css" / "input.css"),
-        "output": str(PACKAGE_DIR / "ui" / "static" / "tawala" / "css" / "output.css"),
+        "input": APP_DIR / "static" / "app" / "css" / "input.css",
+        "output": PACKAGE_DIR / "ui" / "static" / "tawala" / "css" / "output.css",
     },
 }
 

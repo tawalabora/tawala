@@ -233,14 +233,15 @@ class Command(BaseCommand):
         folder = Path(settings.CLI_DIR)
         folder.mkdir(parents=True, exist_ok=True)
 
-        # Determine destination filename
-        destination_name: str
-        if platform_name == "windows":
-            destination_name = "tailwindcss.exe"
-        else:
-            destination_name = "tailwindcss"
+        # Create .gitignore in CLI_DIR to ignore all files
+        gitignore_path = folder / ".gitignore"
+        if not gitignore_path.exists():
+            gitignore_path.write_text("*\n", encoding="utf-8")
+            self.stdout.write(
+                self.style.SUCCESS(f"✓ Created .gitignore at: {gitignore_path}")
+            )
 
-        destination: Path = folder / destination_name
+        destination: Path = folder / "tailwindcss"
 
         # Show download information
         download_url: str = self._get_download_url(version, platform_name, architecture)
@@ -293,10 +294,10 @@ class Command(BaseCommand):
             CommandError: If build fails or configuration is incomplete
         """
         tailwind_config: dict[str, Any] = settings.TAILWIND_CLI
-        tailwind_cli: str | Path | None = tailwind_config.get("PATH")
-        css_config: dict[str, str] = tailwind_config.get("CSS", {})
-        input_css: str | None = css_config.get("input")
-        output_css: str | None = css_config.get("output")
+        tailwind_cli: Path | str = tailwind_config.get("PATH", "")
+        css_config: dict[str, Path | str] = tailwind_config.get("CSS", {})
+        input_css: Path | str = css_config.get("input", "")
+        output_css: Path | str = css_config.get("output", "")
 
         if not tailwind_cli or not input_css or not output_css:
             raise CommandError(

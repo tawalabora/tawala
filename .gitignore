@@ -7,8 +7,5 @@ __pycache__/
 # Distribution/build folder
 /dist/
 
-# Tailwind CSS generated file
-/src/tawala/ui/static/tawala/css/output.css
-
 # Temporary files
 /.tmp/

@@ -615,7 +615,7 @@ wheels = [
 
 [[package]]
 name = "tawala"
-version = "1.0.6.dev15"
+version = "1.0.6.dev16"
 source = { editable = "." }
 dependencies = [
     { name = "django" },
