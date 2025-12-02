@@ -72,7 +72,7 @@ class StorageConfig(base.Config):
         default="filesystem",
     )
     token = base.ConfField(
-        env="STORAGE_TOKEN",
+        env="BLOB_READ_WRITE_TOKEN",
         toml="storage.token",
     )
 
