@@ -229,8 +229,8 @@ class Command(BaseCommand):
         # Get version from settings
         version: str = tailwind_config["VERSION"]
 
-        # Get download folder from PROJECT_DIRS
-        folder = Path(settings.PROJECT_DIRS["CLI"])
+        # Get download folder from CLI_DIR
+        folder = Path(settings.CLI_DIR)
         folder.mkdir(parents=True, exist_ok=True)
 
         # Determine destination filename

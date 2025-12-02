@@ -1,13 +1,11 @@
 from importlib.metadata import version
 from pathlib import Path
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 from django.utils.csp import CSP  # type: ignore[reportMissingTypeStubs]
 
 from . import config
 from .base import Project
-from .checks import CLISetup
-from .types import ProjectDirsSetting
 
 TAWALA_VERSION = version("tawala")
 
@@ -16,33 +14,12 @@ TAWALA_VERSION = version("tawala")
 # Initialization
 # ==============================================================================
 
-
-def _get_base_dir() -> Optional[Path]:
-    if CLISetup.is_successful:
-        return Project.get_base_dir()
-    else:
-        return Project.get_base_dir_or_exit()
-
-
-BASE_DIR = _get_base_dir()
-
-assert BASE_DIR is not None, (
-    "BASE_DIR should have already been validated and set. "
-    "To use the base directory path, preferably get it from PROJECT_DIRS['BASE'] "
-    "and not from BASE_DIR setting.\n"
-    "If using any 'Project' classmethods, "
-    "be sure that you have used 'Project.get_base_dir_exit()' "
-    "before using any other of its methods."
-)
-
-PROJECT_DIRS: ProjectDirsSetting = {
-    "BASE": BASE_DIR,
-    "APP": BASE_DIR / "app",
-    "API": BASE_DIR / "api",
-    "PUBLIC": BASE_DIR / "public",
-    "CLI": BASE_DIR / ".cli",
-    "PACKAGE": Project.tawala_package_dir,
-}
+PACKAGE_DIR = Project.tawala_package_dir
+BASE_DIR = Project.get_base_dir()
+APP_DIR = BASE_DIR / "app"
+API_DIR = BASE_DIR / "api"
+PUBLIC_DIR = BASE_DIR / "public"
+CLI_DIR = BASE_DIR / ".cli"
 
 
 class Tawala:
@@ -155,7 +132,7 @@ def _get_database_config() -> dict[str, dict[str, Any]]:
             return {
                 "default": {
                     "ENGINE": "django.db.backends.sqlite3",
-                    "NAME": PROJECT_DIRS["BASE"] / "db.sqlite3",
+                    "NAME": BASE_DIR / "db.sqlite3",
                 }
             }
 
@@ -201,10 +178,8 @@ TAILWIND_CLI: dict[str, Any] = {
     "PATH": T.tailwind_cli.path,
     "VERSION": T.tailwind_cli.version,
     "CSS": {
-        "input": str(PROJECT_DIRS["APP"] / "static" / "app" / "css" / "input.css"),
-        "output": str(
-            PROJECT_DIRS["PACKAGE"] / "ui" / "static" / "tawala" / "css" / "output.css"
-        ),
+        "input": str(APP_DIR / "static" / "app" / "css" / "input.css"),
+        "output": str(PACKAGE_DIR / "ui" / "static" / "tawala" / "css" / "output.css"),
     },
 }
 
@@ -215,7 +190,7 @@ TAILWIND_CLI: dict[str, Any] = {
 # ==============================================================================
 
 STATIC_URL = "/static/"
-STATIC_ROOT: Path = PROJECT_DIRS["PUBLIC"] / "static"
+STATIC_ROOT: Path = PUBLIC_DIR / "static"
 
 
 # ==============================================================================
@@ -241,7 +216,7 @@ def _get_storage_config() -> dict[str, Any]:
             storage_backend = "django.core.files.storage.FileSystemStorage"
             global MEDIA_URL, MEDIA_ROOT
             MEDIA_URL = "/media/"
-            MEDIA_ROOT = PROJECT_DIRS["PUBLIC"] / "media"
+            MEDIA_ROOT = PUBLIC_DIR / "media"
 
         case "vercel" | "vercelblob" | "vercel_blob" | "vercel-blob":
             storage_backend = "tawala.utils.backends.storage.VercelBlobStorage"

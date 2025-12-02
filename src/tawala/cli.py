@@ -12,7 +12,6 @@ from typing import NoReturn, Optional
 from django.core.management import ManagementUtility
 
 from .conf.base import Project
-from .conf.checks import CLISetup
 
 
 def main() -> Optional[NoReturn]:
@@ -31,7 +30,6 @@ def main() -> Optional[NoReturn]:
     base_dir = Project.get_base_dir_or_exit()
     sys.path.insert(0, str(base_dir))
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tawala.conf.settings")
-    CLISetup.setsuccessful()
 
     utility = ManagementUtility(sys.argv)
     utility.prog_name = "tawala"

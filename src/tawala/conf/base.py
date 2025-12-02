@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, NoReturn, Optional
 
 from ..utils.helpers import to_bool, to_list_of_str
 
@@ -20,7 +20,7 @@ class Project:
     _cached_toml_section: Optional[dict[str, Any]] = None
 
     @classmethod
-    def _detect_base_dir(cls) -> tuple[Optional[Path], bool, Optional[dict[str, Any]]]:
+    def _detect_base_dir(cls) -> tuple[Path, bool, Optional[dict[str, Any]]]:
         """Detect if we're in a valid Tawala project and cache the results."""
 
         cwd = Path.cwd()
@@ -39,12 +39,12 @@ class Project:
                 if toml_section is not None:
                     return pyproject_toml.parent, True, toml_section
                 else:
-                    return None, False, None
+                    return cwd, False, None
         else:
-            return None, False, None
+            return cwd, False, None
 
     @classmethod
-    def _get_base_dir_on_initial_load(cls) -> Optional[Path]:
+    def _get_base_dir_on_initial_load(cls) -> Path:
         """
         Get the Tawala app base directory or raise NotBaseDirectoryError.
 
@@ -54,7 +54,7 @@ class Project:
         Raises:
             NotBaseDirectoryError: If not in a valid Tawala app base directory.
         """
-        if cls._cached_base_dir is None and cls._cached_is_valid is None:
+        if cls._cached_base_dir is None:
             cls._cached_base_dir, cls._cached_is_valid, cls._cached_toml_section = (
                 cls._detect_base_dir()
             )
@@ -69,7 +69,7 @@ class Project:
         return cls._cached_base_dir
 
     @classmethod
-    def get_base_dir_or_exit(cls) -> Optional[Path]:
+    def get_base_dir_or_exit(cls) -> Path | NoReturn:
         """Get the Tawala app base directory or exit with an error."""
         try:
             return cls._get_base_dir_on_initial_load()
@@ -89,10 +89,10 @@ class Project:
         Returns:
             Path: The base directory.
         """
-        assert cls._cached_base_dir is not None, (
-            "Only use when the base directory has already been validated."
-        )
-        return cls._cached_base_dir
+        if cls._cached_is_valid and cls._cached_base_dir is not None:
+            return cls._cached_base_dir
+        else:
+            return cls.get_base_dir_or_exit()
 
     @classmethod
     def get_toml_section(cls) -> dict[str, Any]:
