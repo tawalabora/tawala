@@ -112,7 +112,7 @@ class TawalaOutput(CommandOutput):
             total: The total number of commands.
         """
         progress_bar = self._create_progress_bar(index, total)
-        self.command.stdout.write(f"{progress_bar}")
+        self.command.stdout.write(f"\n{progress_bar}")
         self.command.stdout.write(self.command.style.SUCCESS(f"✓ Completed: {cmd}"))
         self.command.stdout.write("")
 
@@ -128,7 +128,7 @@ class TawalaOutput(CommandOutput):
             total: The total number of commands.
         """
         progress_bar = self._create_progress_bar(index, total)
-        self.command.stdout.write(f"{progress_bar}")
+        self.command.stdout.write(f"\n{progress_bar}")
         self.command.stdout.write(self.command.style.ERROR(f"✗ Failed: {cmd}"))
         self.command.stdout.write(self.command.style.ERROR(f"   Error: {error}"))
         self.command.stdout.write("")

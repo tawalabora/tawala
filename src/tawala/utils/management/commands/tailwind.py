@@ -38,23 +38,20 @@ class Command(BaseCommand):
             "--yes",
             dest="auto_confirm",
             action="store_true",
-            help="Automatically confirm all prompts.",
+            help="Automatically confirm all prompts (overwrites existing file unless --use-cache is also set).",
+        )
+
+        parser.add_argument(
+            "--use-cache",
+            dest="use_cache",
+            action="store_true",
+            help="If Tailwind CLI already exists in CLI_DIR, skip prompt and skip downloading without overwriting (even when -y is used).",
         )
 
     def _get_platform_info(self) -> tuple[str, str]:
-        """
-        Determine the current platform and architecture.
-
-        Returns:
-            tuple[str, str]: (platform_name, architecture) e.g., ('linux', 'x64')
-
-        Raises:
-            CommandError: If platform or architecture is unsupported
-        """
         system: str = platform.system().lower()
         machine: str = platform.machine().lower()
 
-        # Map system names
         platform_map: dict[str, str] = {
             "darwin": "macos",
             "linux": "linux",
@@ -64,18 +61,13 @@ class Command(BaseCommand):
         platform_name: str | None = platform_map.get(system)
         if not platform_name:
             raise CommandError(
-                f"Unsupported operating system: {system}. "
-                "Supported: Linux, macOS, Windows"
+                f"Unsupported operating system: {system}. Supported: Linux, macOS, Windows"
             )
 
-        # Map architecture names
-        # Reference: https://docs.python.org/3/library/platform.html#platform.machine
         arch_map: dict[str, str] = {
-            # x86_64 variants
             "x86_64": "x64",
             "amd64": "x64",
             "x64": "x64",
-            # ARM64 variants
             "arm64": "arm64",
             "aarch64": "arm64",
             "armv8": "arm64",
@@ -92,58 +84,27 @@ class Command(BaseCommand):
     def _get_download_url(
         self, version: str, platform_name: str, architecture: str
     ) -> str:
-        """
-        Construct the download URL for the Tailwind CLI executable.
-
-        Args:
-            version: Version string (e.g., 'v4.1.17' or 'latest')
-            platform_name: Platform name ('linux', 'macos', 'windows')
-            architecture: Architecture ('x64', 'arm64')
-
-        Returns:
-            str: Complete download URL
-        """
         base_url: str = "https://github.com/tailwindlabs/tailwindcss/releases"
 
-        # Construct filename based on platform and architecture
-        # Match exact filenames from GitHub releases
         if platform_name == "windows":
-            # Windows only has x64 version
             filename: str = "tailwindcss-windows-x64.exe"
         elif platform_name == "linux":
-            # Linux has both architectures (standard glibc versions)
             filename = f"tailwindcss-linux-{architecture}"
         elif platform_name == "macos":
-            # macOS has both architectures
             filename = f"tailwindcss-macos-{architecture}"
         else:
             raise CommandError(f"Unsupported platform: {platform_name}")
 
-        # Construct full download path
-        download_path: str = f"{base_url}/download/{version}/{filename}"
-
-        return download_path
+        return f"{base_url}/download/{version}/{filename}"
 
     def _download_file(
         self, url: str, destination: Path, show_progress: bool = True
     ) -> None:
-        """
-        Download a file from a URL to a destination path.
-
-        Args:
-            url: URL to download from
-            destination: Path to save the file
-            show_progress: Whether to show download progress
-
-        Raises:
-            CommandError: If download fails
-        """
         temp_destination: Path = destination.with_suffix(destination.suffix + ".tmp")
 
         try:
             self.stdout.write(f"Downloading from: {url}")
 
-            # Create a custom progress callback
             def progress_callback(
                 block_num: int, block_size: int, total_size: int
             ) -> None:
@@ -156,83 +117,58 @@ class Command(BaseCommand):
                     )
                     self.stdout.flush()
 
-            # Download to temporary file first
             urlretrieve(url, temp_destination, progress_callback)
 
             if show_progress:
                 self.stdout.write("")
 
-            # Move temp file to final destination only if download completed
             temp_destination.rename(destination)
-
             self.stdout.write(self.style.SUCCESS(f"✓ Downloaded to: {destination}"))
 
         except KeyboardInterrupt:
-            # Clean up partial download on keyboard interrupt
             if temp_destination.exists():
                 temp_destination.unlink()
             self.stdout.write("\n")
             self.stdout.write(self.style.WARNING("Download cancelled by user."))
             raise CommandError("Installation aborted.")
         except HTTPError as e:
-            # Clean up on error
             if temp_destination.exists():
                 temp_destination.unlink()
             raise CommandError(
                 f"Failed to download from {url}. HTTP Error {e.code}: {e.reason}"
             )
         except URLError as e:
-            # Clean up on error
             if temp_destination.exists():
                 temp_destination.unlink()
             raise CommandError(f"Failed to download: {e.reason}")
         except Exception as e:
-            # Clean up on error
             if temp_destination.exists():
                 temp_destination.unlink()
             raise CommandError(f"Download failed: {e}")
 
     def _make_executable(self, file_path: Path) -> None:
-        """
-        Make a file executable (Unix-like systems only).
-
-        Args:
-            file_path: Path to the file to make executable
-        """
         if sys.platform != "win32":
             current_permissions: int = file_path.stat().st_mode
-            new_permissions: int = (
+            file_path.chmod(
                 current_permissions | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
             )
-            file_path.chmod(new_permissions)
             self.stdout.write(self.style.SUCCESS(f"✓ Made executable: {file_path}"))
 
-    def handle_install(self, auto_confirm: bool = False) -> None:
-        """
-        Handle the installation/download of Tailwind CLI.
-
-        Args:
-            auto_confirm: Skip confirmation prompts if True
-
-        Raises:
-            CommandError: If installation fails
-        """
+    def handle_install(
+        self, auto_confirm: bool = False, use_cache: bool = False
+    ) -> None:
         tailwind_config: dict[str, Any] = settings.TAILWIND_CLI
 
-        # Get platform information automatically
         platform_name, architecture = self._get_platform_info()
         self.stdout.write(
             f"Detected platform: {self.style.SUCCESS(f'{platform_name}-{architecture}')}"
         )
 
-        # Get version from settings
         version: str = tailwind_config["VERSION"]
 
-        # Get download folder from CLI_DIR
         folder = Path(settings.CLI_DIR)
         folder.mkdir(parents=True, exist_ok=True)
 
-        # Create .gitignore in CLI_DIR to ignore all files
         gitignore_path = folder / ".gitignore"
         if not gitignore_path.exists():
             gitignore_path.write_text("*\n", encoding="utf-8")
@@ -242,7 +178,6 @@ class Command(BaseCommand):
 
         destination: Path = folder / "tailwindcss"
 
-        # Show download information
         download_url: str = self._get_download_url(version, platform_name, architecture)
         self.stdout.write("\nDownload Information:")
         self.stdout.write(f"  Version:     {version}")
@@ -250,31 +185,41 @@ class Command(BaseCommand):
         self.stdout.write(f"  Destination: {destination}")
         self.stdout.write(f"  URL:         {download_url}\n")
 
-        # Check if already exists
+        # ---- CACHE LOGIC BRANCH ----
+        if destination.exists() and use_cache:
+            self.stdout.write(
+                self.style.HTTP_NOT_MODIFIED(
+                    "\nUsing cached Tailwind CLI. Skipping download.\n"
+                )
+            )
+            return  # continue silently without overwriting
+
+        # ---- EXIST LOGIC BRANCH ----
         if destination.exists():
             self.stdout.write(
-                self.style.WARNING(f"⚠ Tailwind CLI already exists at: {destination}")
+                self.style.WARNING(f"\n⚠ Tailwind CLI already exists at: {destination}")
             )
-            if not auto_confirm:
+
+            # auto-confirm alone overwrites, but NOT when cache is set - handled above
+            if auto_confirm:
+                self.stdout.write("Auto-confirming overwrite...")
+                destination.unlink()
+            else:
                 overwrite: str = input("Overwrite? (y/N): ").strip().lower()
                 if overwrite != "y":
                     self.stdout.write("Installation cancelled.")
                     return
-            else:
-                self.stdout.write("Auto-confirming overwrite...")
-            destination.unlink()
+                destination.unlink()
         else:
             # Confirm download if not auto-confirmed
             if not auto_confirm:
-                confirm: str = input("Proceed with download? (y/N): ").strip().lower()
+                confirm: str = input("\nProceed with download? (y/N): ").strip().lower()
                 if confirm != "y":
                     self.stdout.write("Installation cancelled.")
                     return
 
-        # Download the file
+        # Download and install
         self._download_file(download_url, destination)
-
-        # Make executable (Unix-like systems)
         self._make_executable(destination)
 
         self.stdout.write(
@@ -286,12 +231,6 @@ class Command(BaseCommand):
         )
 
     def handle_build(self) -> None:
-        """
-        Handle the build process for Tailwind CSS.
-
-        Raises:
-            CommandError: If build fails or configuration is incomplete
-        """
         tailwind_config: dict[str, Any] = settings.TAILWIND_CLI
         tailwind_cli: Path | str = tailwind_config.get("PATH", "")
         css_config: dict[str, Path | str] = tailwind_config.get("CSS", {})
@@ -300,8 +239,7 @@ class Command(BaseCommand):
 
         if not tailwind_cli or not input_css or not output_css:
             raise CommandError(
-                "Tailwind CLI configuration is incomplete. "
-                "Check TAILWIND_CLI settings in your Tawala settings."
+                "Tailwind CLI configuration is incomplete. Check TAILWIND_CLI settings."
             )
 
         command: list[str] = [
@@ -317,26 +255,26 @@ class Command(BaseCommand):
             self.stdout.write("Building Tailwind CSS...")
             subprocess.run(command, check=True)
             self.stdout.write(self.style.SUCCESS("✓ Tailwind CSS built successfully!"))
-
         except FileNotFoundError:
             raise CommandError(
-                f"Tailwind CSS CLI not found at '{tailwind_cli}'. "
-                "Please run 'tawala tailwind --install' first."
+                f"Tailwind CLI not found at '{tailwind_cli}'. Run tawala tailwind --install first."
             )
         except subprocess.CalledProcessError as e:
             raise CommandError(f"Tailwind CSS build failed: {e}")
         except Exception as e:
-            raise CommandError(f"An unexpected error occurred: {e}")
+            raise CommandError(f"Unexpected error: {e}")
 
     def handle(self, *args: Any, **options: Any) -> None:
-        """
-        Main command handler.
+        # Validate that use_cache is not used with build
+        if options["build"] and options.get("use_cache", False):
+            raise CommandError(
+                "The --use-cache option can only be used with [-i, --install], not with [-b, --build]."
+            )
 
-        Args:
-            *args: Positional arguments
-            **options: Command options from argument parser
-        """
         if options["install"]:
-            self.handle_install(auto_confirm=options.get("auto_confirm", False))
+            self.handle_install(
+                auto_confirm=options.get("auto_confirm", False),
+                use_cache=options.get("use_cache", False),
+            )
         elif options["build"]:
             self.handle_build()
