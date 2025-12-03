@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "tawala"
-version = "1.0.8.dev2"
+version = "1.0.8.dev3"
 description = ""
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -24,7 +24,7 @@ issues = "https://github.com/tawalabora/tawala/issues"
 
 [project.scripts]
 tawala = "tawala.core.manage:main"
-tx = "tawala.core.manage:main"
+twl = "tawala.core.manage:main"
 
 [dependency-groups]
 dev = [
