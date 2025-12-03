@@ -11,15 +11,15 @@ TAWALA_VERSION = version("tawala")
 
 
 # ==============================================================================
-# Initialization
+# App Initialization
 # ==============================================================================
 
-PACKAGE_DIR = Project.tawala_package_dir
 BASE_DIR = Project.get_base_dir()
 APP_DIR = BASE_DIR / "app"
 API_DIR = BASE_DIR / "api"
 PUBLIC_DIR = BASE_DIR / "public"
 CLI_DIR = BASE_DIR / ".cli"
+TAWALA_PACKAGE_DIR = Path(__file__).resolve().parent.parent
 
 
 class Tawala:
@@ -58,9 +58,9 @@ if not DEBUG:
 # Application definition
 # ==============================================================================
 
-ROOT_URLCONF = "tawala.conf.management.app.urls"
-ASGI_APPLICATION = "tawala.conf.management.api.asgi.application"
-WSGI_APPLICATION = "tawala.conf.management.api.wsgi.application"
+ROOT_URLCONF = "tawala.conf.app.urls"
+ASGI_APPLICATION = "tawala.conf.api.asgi.application"
+WSGI_APPLICATION = "tawala.conf.api.wsgi.application"
 
 INSTALLED_APPS: list[str] = [
     "django.contrib.admin",
@@ -179,7 +179,12 @@ TAILWIND_CLI: dict[str, Any] = {
     "VERSION": T.tailwind_cli.version,
     "CSS": {
         "input": APP_DIR / "static" / "app" / "css" / "input.css",
-        "output": PACKAGE_DIR / "ui" / "static" / "tawala" / "css" / "output.css",
+        "output": TAWALA_PACKAGE_DIR
+        / "ui"
+        / "static"
+        / "tawala"
+        / "css"
+        / "output.css",
     },
 }
 

@@ -8,7 +8,7 @@ from django.core.management.base import BaseCommand
 from django.core.management.utils import get_random_secret_key
 
 from ...conf import config
-from ...conf.base import Config
+from ...conf.base import BaseConfig
 
 
 class Generator(ABC):
@@ -277,7 +277,7 @@ class EnvGenerator(Generator):
             The complete .env file content as a string.
         """
 
-        config_classes: list[tuple[str, type[Config]]] = [
+        config_classes: list[tuple[str, type[BaseConfig]]] = [
             ("Security", config.SecurityConfig),
             ("Application", config.ApplicationConfig),
             ("Database", config.DatabaseConfig),
@@ -297,7 +297,6 @@ class EnvGenerator(Generator):
         ]
 
         for section_name, config_class in config_classes:
-            # Use the get_env_var_info() method from Config base class
             section_vars = config_class.get_env_var_info()
 
             if not section_vars:
