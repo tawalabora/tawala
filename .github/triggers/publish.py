@@ -1,3 +1,15 @@
+"""Trigger the 'Publish to PyPI' GitHub Actions workflow by tagging and pushing.
+
+This script:
+- Reads repository metadata from pyproject.toml to build the Actions URL.
+- Obtains the current version via the `uv` CLI (`uv version --short`).
+- Creates an annotated git tag named "v{version}" and pushes tags to origin,
+    which triggers the workflow defined in .github/workflows/publish.yaml
+    (configured to run on push tags and workflow_dispatch).
+
+Run with --dry or --dry-run to preview the git commands without executing them.
+"""
+
 from __future__ import annotations
 
 import argparse
