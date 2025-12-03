@@ -11,15 +11,17 @@ Example:
     tawala dev 0.0.0.0:9000 --no-clipboard
 """
 
+import socket
 from typing import Any
 
+from django.conf import settings
 from django.contrib.staticfiles.management.commands.runserver import (
     Command as RunserverCommand,
 )
 from django.core.management.base import CommandParser
+from django.utils import timezone
 
-from ..arts import get_dev_art
-from ..enums import TerminalSize
+from ..arts import AsciiArtPrinter
 
 
 class Command(RunserverCommand):
@@ -64,6 +66,7 @@ class Command(RunserverCommand):
     port: str
     protocol: str
     use_ipv6: bool
+    no_clipboard: bool
 
     def add_arguments(self, parser: CommandParser) -> None:
         """Add custom arguments to the command.
@@ -130,8 +133,8 @@ class Command(RunserverCommand):
                     }
                 )
             )
-            # This is the only overridden part. Replaced 'python manage.py migrate' with 'tawala migrate'
-            self.stdout.write(self.style.NOTICE("Run 'tawala migrate' to apply them."))
+            OVERRIDE = "tawala migrate"  # Only thing we're overriding
+            self.stdout.write(self.style.NOTICE(f"Run {OVERRIDE} to apply them."))
 
     def on_bind(self, server_port: int) -> None:
         """Custom server startup message and initialization.
@@ -144,6 +147,7 @@ class Command(RunserverCommand):
         Args:
             server_port: The port the server is bound to.
         """
+        self._print_startup_message()
         self._print_startup_banner()
         self._print_server_info(server_port)
 
@@ -152,6 +156,10 @@ class Command(RunserverCommand):
 
         self.stdout.write("")  # spacing
 
+    def _print_startup_message(self) -> None:
+        """Print initial startup message."""
+        self.stdout.write(self.style.SUCCESS("\n✨ Starting dev server...") + "\n")
+
     def _print_startup_banner(self) -> None:
         """Print ASCII banner based on terminal width.
 
@@ -159,30 +167,8 @@ class Command(RunserverCommand):
         on whether the terminal is wide enough. Includes warning messages and
         control instructions appropriate for the terminal size.
         """
-        import shutil
-
-        self.stdout.write(self.style.SUCCESS("\n✨ Starting dev server...") + "\n")
-
-        terminal_width = shutil.get_terminal_size(fallback=(80, 24)).columns
-        art_lines = get_dev_art(terminal_width)
-
-        for line in art_lines:
-            self.stdout.write(self.style.HTTP_INFO(line))
-
-        if terminal_width >= TerminalSize.THRESHOLD:
-            self.stdout.write(
-                self.style.HTTP_INFO("         🔥  Development Server  🔥")
-            )
-            self.stdout.write(
-                self.style.WARNING("       ⚠️  Not suitable for production!  ⚠️")
-            )
-            self.stdout.write(self.style.NOTICE("             Press Ctrl-C to quit"))
-        else:
-            self.stdout.write(self.style.HTTP_INFO("    🔥  Dev Server  🔥"))
-            self.stdout.write(self.style.WARNING("  ⚠️   Not for production! ⚠️"))
-            self.stdout.write(self.style.NOTICE("       Ctrl-C to quit"))
-
-        self.stdout.write("")
+        printer = AsciiArtPrinter(self)
+        printer.print_dev_banner()
 
     def _print_server_info(self, server_port: int) -> None:
         """Print server and version information.
@@ -193,14 +179,19 @@ class Command(RunserverCommand):
         Args:
             server_port: The port the server is bound to.
         """
-        from django.conf import settings
-        from django.utils import timezone
+        self._print_timestamp()
+        self._print_version()
+        self._print_local_url(server_port)
 
+        if self.addr in ("0", "0.0.0.0"):
+            self._print_network_url(server_port)
+
+    def _print_timestamp(self) -> None:
+        """Print current date and time with timezone."""
         tz = timezone.get_current_timezone()
         now = timezone.localtime(timezone.now(), timezone=tz)
         timestamp = now.strftime("%B %d, %Y - %X")
         tz_name = now.strftime("%Z")
-        version = getattr(settings, "TAWALA_VERSION", "unknown")
 
         if tz_name:
             self.stdout.write(
@@ -209,16 +200,22 @@ class Command(RunserverCommand):
         else:
             self.stdout.write(f"\n  📅 Date: {self.style.HTTP_NOT_MODIFIED(timestamp)}")
 
+    def _print_version(self) -> None:
+        """Print Tawala version."""
+        version = getattr(settings, "TAWALA_VERSION", "unknown")
         self.stdout.write(
             f"  🔧 Tawala version: {self.style.HTTP_NOT_MODIFIED(version)}"
         )
 
+    def _print_local_url(self, server_port: int) -> None:
+        """Print local server URL.
+
+        Args:
+            server_port: The port the server is bound to.
+        """
         addr = self._format_address()
         url = f"{self.protocol}://{addr}:{server_port}/"
         self.stdout.write(f"  🌐 Local address:   {self.style.SUCCESS(url)}")
-
-        if self.addr == "0" or self.addr == "0.0.0.0":
-            self._print_network_url(server_port)
 
     def _format_address(self) -> str:
         """Format address for display.
@@ -246,8 +243,6 @@ class Command(RunserverCommand):
         Args:
             server_port: The port the server is bound to.
         """
-        import socket
-
         try:
             hostname = socket.gethostname()
             local_ip = socket.gethostbyname(hostname)

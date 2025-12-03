@@ -26,8 +26,7 @@ class Command(BaseCommand):
             help="Build the Tailwind CSS file.",
         )
         group.add_argument(
-            "-d",
-            "--download",
+            "-i",
             "--install",
             dest="install",
             action="store_true",
