@@ -38,14 +38,12 @@ class ProjectConfig:
         if self._config is None:
             with open(self.pyproject_path, "rb") as f:
                 self._config = tomllib.load(f)
-        # mypy-friendly cast (we just loaded it or it was previously set)
-        return self._config  # type: ignore[return-value]
+        return self._config
 
     @property
     def repo_url(self) -> str:
         """Return repository URL from TOML (raises ValueError if missing)."""
         urls = self.load().get("project", {}).get("urls", {})
-        # urls is expected to be mapping of str->str
         url = urls.get("repository")
         if not url:
             raise ValueError("No repository URL found in project.urls")
@@ -109,7 +107,7 @@ class GitPublisher:
             subprocess.run(cmd, check=True, capture_output=True, text=True)
 
 
-def publish(dry_run: bool = False) -> ExitCode:
+def tag_and_push(dry_run: bool = False) -> ExitCode:
     style = color_style()
 
     if dry_run:
@@ -183,7 +181,7 @@ def main() -> NoReturn:
     )
 
     args = parser.parse_args()
-    sys.exit(publish(args.dry_run))
+    sys.exit(tag_and_push(args.dry_run))
 
 
 if __name__ == "__main__":
