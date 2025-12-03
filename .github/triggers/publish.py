@@ -30,7 +30,7 @@ class ProjectConfig:
     @classmethod
     def from_base_dir(cls) -> "ProjectConfig":
         """Factory constructor using the project root directory"""
-        base = Path(__file__).resolve().parent.parent
+        base = Path(__file__).resolve().parent.parent.parent
         return cls(base / "pyproject.toml")
 
     def load(self) -> dict[str, Any]:
