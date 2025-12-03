@@ -7,11 +7,11 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.core.management.utils import get_random_secret_key
 
-from ...conf import config
-from ...conf.base import BaseConfig
+from tawala.conf import config
+from tawala.conf.base import BaseConfig
 
 
-class Generator(ABC):
+class FileGenerator(ABC):
     """Base class for generators.
 
     Defines the interface for all generator types. Subclasses must implement
@@ -41,7 +41,7 @@ class Generator(ABC):
         pass
 
 
-class RandomGenerator(Generator):
+class RandomStringGenerator(FileGenerator):
     """Generator for random strings suitable for Tawala SECRET_KEY.
 
     Generates a cryptographically secure random string and optionally copies
@@ -119,7 +119,7 @@ VercelConfig = TypedDict(
 )
 
 
-class VercelGenerator(Generator):
+class VercelJSONFileGenerator(FileGenerator):
     """Generator for Vercel configuration file.
 
     Creates a vercel.json configuration file at the project BASE_DIR with
@@ -157,8 +157,8 @@ class VercelGenerator(Generator):
 
         content: VercelConfig = {
             "$schema": "https://openapi.vercel.sh/vercel.json",
-            "installCommand": "export UV_LINK_MODE=copy; uv run tawala tailwind -d -y",
-            "buildCommand": "export UV_LINK_MODE=copy; uv run tawala build",
+            "installCommand": "uv run tawala run install",
+            "buildCommand": "uv run tawala run build",
             "rewrites": [{"source": "/(.*)", "destination": "/api/asgi"}],
         }
 
@@ -191,7 +191,7 @@ class VercelGenerator(Generator):
         return response == "y"
 
 
-class EnvGenerator(Generator):
+class EnvFileGenerator(FileGenerator):
     """Generator for .env configuration file.
 
     Creates a .env file template at the project BASE_DIR with all available

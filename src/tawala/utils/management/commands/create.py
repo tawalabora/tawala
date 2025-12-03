@@ -1,23 +1,28 @@
-"""Management command: generate
+"""Management command: create
 
 Generates various project configuration files and secrets. Supports multiple
 generators including random secret keys, Vercel configuration files, and
 environment configuration files.
 
 Example:
-    tawala generate random
-    tawala generate random --no-clipboard
-    tawala generate vercel
-    tawala generate vercel --force
-    tawala generate env
-    tawala generate env --path /custom/path/.env --force --uncomment
+    tawala create random
+    tawala create random --no-clipboard
+    tawala create vercel
+    tawala create vercel --force
+    tawala create env
+    tawala create env --path /custom/path/.env --force --uncomment
 """
 
 from typing import Any, cast
 
 from django.core.management.base import BaseCommand, CommandParser
 
-from ..generators import EnvGenerator, Generator, RandomGenerator, VercelGenerator
+from ..generators.file import (
+    EnvFileGenerator,
+    FileGenerator,
+    RandomStringGenerator,
+    VercelJSONFileGenerator,
+)
 
 
 class Command(BaseCommand):
@@ -30,37 +35,31 @@ class Command(BaseCommand):
 
     Examples:
         # Generate a random secret key with clipboard copy
-        tawala generate random
+        tawala create random
 
         # Generate without copying to clipboard
-        tawala generate random --no-clipboard
+        tawala create random --no-clipboard
 
         # Generate Vercel configuration
-        tawala generate vercel
+        tawala create vercel
 
         # Generate Vercel configuration, overwriting if it exists
-        tawala generate vercel --force
+        tawala create vercel --force
 
         # Generate .env file
-        tawala generate env
+        tawala create env
 
         # Generate .env file with custom path and options
-        tawala generate env --path /custom/path/.env --force --uncomment
-
-        # Use from other management commands
-        from django.core.management import call_command
-        call_command('generate', 'random')
-        call_command('generate', 'vercel', force=True)
-        call_command('generate', 'env', uncomment=True)
+        tawala create env --path /custom/path/.env --force --uncomment
     """
 
     help = "Generate various project configuration files and secrets."
     requires_system_checks: bool = cast(bool, [])
 
-    GENERATORS: dict[str, type[Generator]] = {
-        "random": RandomGenerator,
-        "vercel": VercelGenerator,
-        "env": EnvGenerator,
+    GENERATORS: dict[str, type[FileGenerator]] = {
+        "random": RandomStringGenerator,
+        "vercel": VercelJSONFileGenerator,
+        "env": EnvFileGenerator,
     }
 
     def add_arguments(self, parser: CommandParser) -> None:
@@ -70,10 +69,10 @@ class Command(BaseCommand):
             parser: The argument parser to add arguments to.
         """
         parser.add_argument(
-            "generator",
+            "file",
             type=str,
             choices=self.GENERATORS.keys(),
-            help="Specify what to generate (random, vercel, env)",
+            help="Specify which file to create (random, vercel, env)",
         )
 
         # Random generator option
@@ -153,5 +152,5 @@ class Command(BaseCommand):
             return
 
         generator_class = self.GENERATORS[generator_name]
-        generator: Generator = generator_class(self)
+        generator: FileGenerator = generator_class(self)
         generator.handle(*args, **options)
