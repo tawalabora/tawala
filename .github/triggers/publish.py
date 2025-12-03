@@ -16,17 +16,12 @@ import argparse
 import subprocess
 import sys
 import tomllib
-from enum import IntEnum
 from pathlib import Path
 from typing import Any, NoReturn, Optional
 from urllib.parse import urlparse
 
 from django.core.management.color import color_style
-
-
-class ExitCode(IntEnum):
-    SUCCESS = 0
-    ERROR = 1
+from tawala.helpers import ExitCode
 
 
 class ProjectConfig:

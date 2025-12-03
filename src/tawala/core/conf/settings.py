@@ -1,31 +1,26 @@
-from importlib.metadata import version
+"""
+Only use variables from conf/config.py, not from pre.py, to configure.
+
+Note the order:
+- pre.py configures config.py, which in turns is used to configure settings.py.
+- We are using config.py to easily manage fetching of settings from either .env or pyproject.toml in the user's project directory
+- settings.py is then loaded by Django, from which, in post.py, we centralize the variables that are used within ui and utils.
+"""
+
 from pathlib import Path
 from typing import Any, Literal
 
 from django.utils.csp import CSP  # type: ignore[reportMissingTypeStubs]
 
 from . import config
-from .base import Project
-
-TAWALA_VERSION = version("tawala")
 
 
-# ==============================================================================
-# App Initialization
-# ==============================================================================
-
-BASE_DIR = Project.get_base_dir()
-APP_DIR = BASE_DIR / "app"
-API_DIR = BASE_DIR / "api"
-PUBLIC_DIR = BASE_DIR / "public"
-CLI_DIR = BASE_DIR / ".cli"
-TAWALA_PACKAGE_DIR = Path(__file__).resolve().parent.parent
-
-
-class Tawala:
+class Settings:
     """Main configuration class that orchestrates settings."""
 
     def __init__(self):
+        self.package = config.PackageConfig
+        self.project = config.ProjectConfig
         self.security = config.SecurityConfig()
         self.apps = config.ApplicationConfig()
         self.database = config.DatabaseConfig()
@@ -34,7 +29,27 @@ class Tawala:
         self.commands = config.CommandsConfig()
 
 
-T = Tawala()
+T = Settings()
+
+# ==============================================================================
+# Package
+# ==============================================================================
+
+PKG_NAME = T.package.name
+PKG_DIR = T.package.dir
+PKG_VERSION = T.package.version
+
+
+# ==============================================================================
+# Project
+# ==============================================================================
+
+PROJECT_DIR = T.project.dir
+BASE_DIR = PROJECT_DIR
+APP_DIR = PROJECT_DIR / "app"
+API_DIR = PROJECT_DIR / "api"
+PUBLIC_DIR = PROJECT_DIR / "public"
+CLI_DIR = PROJECT_DIR / ".cli"
 
 
 # ==============================================================================
@@ -58,9 +73,9 @@ if not DEBUG:
 # Application definition
 # ==============================================================================
 
-ROOT_URLCONF = "tawala.conf.app.urls"
-ASGI_APPLICATION = "tawala.conf.api.asgi.application"
-WSGI_APPLICATION = "tawala.conf.api.wsgi.application"
+ROOT_URLCONF = f"{PKG_NAME}.core.app.urls"
+ASGI_APPLICATION = f"{PKG_NAME}.core.api.asgi.application"
+WSGI_APPLICATION = f"{PKG_NAME}.core.api.wsgi.application"
 
 INSTALLED_APPS: list[str] = [
     "django.contrib.admin",
@@ -71,8 +86,8 @@ INSTALLED_APPS: list[str] = [
     "django.contrib.staticfiles",
     "django_browser_reload",
     "django_watchfiles",
-    "tawala.utils",
-    "tawala.ui",
+    f"{PKG_NAME}.utils",
+    f"{PKG_NAME}.ui",
     *T.apps.configured_apps,
     "app",
 ]
@@ -144,7 +159,9 @@ def _get_database_config() -> dict[str, dict[str, Any]]:
                     "PORT": T.database.port,
                 }
             else:
-                options["service"] = T.database.service
+                options["service"] = (
+                    T.database.service if T.database.service else f"{PKG_NAME}-app"
+                )
                 config = {}
 
             return {
@@ -159,7 +176,7 @@ def _get_database_config() -> dict[str, dict[str, Any]]:
             return {
                 "default": {
                     "ENGINE": "django.db.backends.sqlite3",
-                    "NAME": BASE_DIR / "db.sqlite3",
+                    "NAME": PROJECT_DIR / "db.sqlite3",
                 }
             }
 
@@ -179,12 +196,7 @@ TAILWIND_CLI: dict[str, Any] = {
     "VERSION": T.tailwind_cli.version,
     "CSS": {
         "input": APP_DIR / "static" / "app" / "css" / "input.css",
-        "output": TAWALA_PACKAGE_DIR
-        / "ui"
-        / "static"
-        / "tawala"
-        / "css"
-        / "output.css",
+        "output": PKG_DIR / "ui" / "static" / "ui" / "css" / "output.css",
     },
 }
 
@@ -212,8 +224,7 @@ def _get_storage_config() -> dict[str, Any]:
     base_config: dict[str, dict[str, str] | str] = {
         "staticfiles": {
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-        "token": T.storage.token,
+        }
     }
 
     match backend:
@@ -224,7 +235,7 @@ def _get_storage_config() -> dict[str, Any]:
             MEDIA_ROOT = PUBLIC_DIR / "media"
 
         case "vercel" | "vercelblob" | "vercel_blob" | "vercel-blob":
-            storage_backend = "tawala.utils.backends.storage.VercelBlobStorage"
+            storage_backend = f"{PKG_NAME}.utils.backends.storage.VercelBlobStorage"
 
         case _:
             raise ValueError(f"Unsupported storage backend: {backend}")
@@ -234,6 +245,7 @@ def _get_storage_config() -> dict[str, Any]:
 
 
 STORAGES = _get_storage_config()
+STORAGE_TOKEN = (T.storage.token,)
 
 
 # ==============================================================================

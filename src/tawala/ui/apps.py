@@ -1,5 +1,7 @@
 from django.apps import AppConfig
 
+from ..core.conf.pre import PKG
 
-class TawalaUIConfig(AppConfig):
-    name = "tawala.ui"
+
+class UIConfig(AppConfig):
+    name = f"{PKG.name}.ui"

@@ -9,8 +9,9 @@ from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import urlretrieve
 
-from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError, CommandParser
+
+from ....core.conf.post import CLI_DIR, PKG_NAME, TAILWIND_CLI
 
 
 class Command(BaseCommand):
@@ -155,18 +156,18 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"✓ Made executable: {file_path}"))
 
     def handle_install(
-        self, auto_confirm: bool = False, use_cache: bool = False
+        self,
+        tailwind_config: dict[str, Any],
+        auto_confirm: bool = False,
+        use_cache: bool = False,
     ) -> None:
-        tailwind_config: dict[str, Any] = settings.TAILWIND_CLI
-
         platform_name, architecture = self._get_platform_info()
         self.stdout.write(
             f"Detected platform: {self.style.SUCCESS(f'{platform_name}-{architecture}')}"
         )
 
         version: str = tailwind_config["VERSION"]
-
-        folder = Path(settings.CLI_DIR)
+        folder: Path = CLI_DIR
         folder.mkdir(parents=True, exist_ok=True)
 
         gitignore_path = folder / ".gitignore"
@@ -230,8 +231,7 @@ class Command(BaseCommand):
             )
         )
 
-    def handle_build(self) -> None:
-        tailwind_config: dict[str, Any] = settings.TAILWIND_CLI
+    def handle_build(self, tailwind_config: dict[str, Any]) -> None:
         tailwind_cli: Path | str = tailwind_config.get("PATH", "")
         css_config: dict[str, Path | str] = tailwind_config.get("CSS", {})
         input_css: Path | str = css_config.get("input", "")
@@ -239,7 +239,7 @@ class Command(BaseCommand):
 
         if not tailwind_cli or not input_css or not output_css:
             raise CommandError(
-                "Tailwind CLI configuration is incomplete. Check TAILWIND_CLI settings."
+                "Tailwind CLI configuration is incomplete. Confirm your TAILWIND_CLI configuration."
             )
 
         command: list[str] = [
@@ -257,7 +257,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("✓ Tailwind CSS built successfully!"))
         except FileNotFoundError:
             raise CommandError(
-                f"Tailwind CLI not found at '{tailwind_cli}'. Run tawala tailwind --install first."
+                f"Tailwind CLI not found at '{tailwind_cli}'. Run {PKG_NAME} tailwind --install first."
             )
         except subprocess.CalledProcessError as e:
             raise CommandError(f"Tailwind CSS build failed: {e}")
@@ -265,6 +265,7 @@ class Command(BaseCommand):
             raise CommandError(f"Unexpected error: {e}")
 
     def handle(self, *args: Any, **options: Any) -> None:
+        tailwind_config = TAILWIND_CLI
         # Validate that use_cache is not used with build
         if options["build"] and options.get("use_cache", False):
             raise CommandError(
@@ -273,8 +274,9 @@ class Command(BaseCommand):
 
         if options["install"]:
             self.handle_install(
+                tailwind_config,
                 auto_confirm=options.get("auto_confirm", False),
                 use_cache=options.get("use_cache", False),
             )
         elif options["build"]:
-            self.handle_build()
+            self.handle_build(tailwind_config)

@@ -1,29 +1,21 @@
 """Management command: run
 
-Executes install or build commands defined in Tawala settings.
+Executes install or build commands.
 Supports dry-run mode for previewing commands before execution
 and continues running remaining commands even if one fails.
-
-Examples:
-    tawala run install
-    tawala run -i
-    tawala run build
-    tawala run -b
-    tawala run install --dry-run
-    tawala run -b --dry-run
 """
 
 from typing import Any
 
-from django.conf import settings
 from django.core.management.base import BaseCommand, CommandParser
 
-from ..arts import ArtType, AsciiArtPrinter
+from ....core.conf.post import COMMANDS_BUILD, COMMANDS_INSTALL, PKG_NAME
+from ..art import ArtPrinter, ArtType
 from ..generators.command import CommandGenerator, CommandOutput
 
 
-class TawalaOutput(CommandOutput):
-    """Tawala-themed command process output with ASCII art and emojis.
+class Output(CommandOutput):
+    """Command process output with ASCII art and emojis.
 
     Provides colorful, visually appealing output with progress bars,
     ASCII art, and strategic use of emojis and colors.
@@ -38,7 +30,7 @@ class TawalaOutput(CommandOutput):
         """
         super().__init__(command)
         self.art_type = art_type
-        self.art_printer = AsciiArtPrinter(command)
+        self.art_printer = ArtPrinter(command)
 
     def print_header(self, command_count: int, dry_run: bool, mode: str) -> None:
         """Print the command process header with ASCII art.
@@ -71,7 +63,7 @@ class TawalaOutput(CommandOutput):
         )
         self.command.stdout.write(
             self.command.style.WARNING(
-                f"   Define {mode} commands in your '.env' file or in pyproject.toml [tool.tawala] section:\n"
+                f"   Define {mode} commands in your '.env' file or in pyproject.toml [tool.{PKG_NAME}] section:\n"
             )
         )
         self.command.stdout.write("")
@@ -186,12 +178,12 @@ class BuildCommandGenerator(CommandGenerator):
     """Generator for build command execution."""
 
     def get_commands_from_settings(self) -> list[str]:
-        """Retrieve build commands from Django settings."""
-        return getattr(settings, "COMMANDS_BUILD", [])
+        """Retrieve build commands."""
+        return COMMANDS_BUILD
 
     def create_output_handler(self) -> CommandOutput:
         """Create the output handler for build commands."""
-        return TawalaOutput(self.django_command, ArtType.BUILD)
+        return Output(self.django_command, ArtType.BUILD)
 
     def get_mode(self) -> str:
         """Get the mode identifier for build commands."""
@@ -202,12 +194,12 @@ class InstallCommandGenerator(CommandGenerator):
     """Generator for install command execution."""
 
     def get_commands_from_settings(self) -> list[str]:
-        """Retrieve install commands from Django settings."""
-        return getattr(settings, "COMMANDS_INSTALL", [])
+        """Retrieve install commands."""
+        return COMMANDS_INSTALL
 
     def create_output_handler(self) -> CommandOutput:
         """Create the output handler for install commands."""
-        return TawalaOutput(self.django_command, ArtType.INSTALL)
+        return Output(self.django_command, ArtType.INSTALL)
 
     def get_mode(self) -> str:
         """Get the mode identifier for install commands."""
@@ -215,40 +207,6 @@ class InstallCommandGenerator(CommandGenerator):
 
 
 class Command(BaseCommand):
-    """Tawala run command executor.
-
-    Executes a series of install or build commands defined in Tawala settings.
-    This command is useful for automating installation and build processes.
-
-    Features:
-    - Execute install or build commands via positional or optional arguments
-    - Mutually exclusive -i/install and -b/build options
-    - Dry-run mode to preview commands without execution
-    - Error handling with continuation (remaining commands still run if one fails)
-    - Colorful output with progress tracking
-    - Creative ASCII art and progress visualization
-
-    Commands should be defined in Tawala settings as COMMANDS_INSTALL or COMMANDS_BUILD.
-
-    Examples:
-        # Execute install commands
-        tawala run install
-        tawala run -i
-
-        # Execute build commands
-        tawala run build
-        tawala run -b
-
-        # Preview commands without executing
-        tawala run install --dry-run
-        tawala run -b --dry-run
-
-        # Use from other management commands
-        from django.core.management import call_command
-        call_command('run', 'install')
-        call_command('run', '-b', dry_run=True)
-    """
-
     help = "Execute install or build commands"
 
     def add_arguments(self, parser: CommandParser) -> None:
@@ -293,7 +251,7 @@ class Command(BaseCommand):
     def handle(self, *args: Any, **options: Any) -> None:
         """Handle the run command execution.
 
-        Retrieves install or build commands from Tawala settings, validates them,
+        Retrieves install or build commands, validates them,
         and either displays them (dry-run) or executes them sequentially.
         Continues execution even if individual commands fail.
 

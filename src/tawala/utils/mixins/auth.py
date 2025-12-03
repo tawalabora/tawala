@@ -11,7 +11,7 @@ What this module provides
 - AnonymousRequiredMixin: allows ONLY anonymous (not logged-in) users to visit a page (typical for login/signup pages).
   If a logged-in user hits the page, they are redirected away.
 - StaffRequiredMixin: allows only authenticated staff members. Non-authenticated users are redirected to login;
-  authenticated non-staff can be redirected or receive a 403, depending on settings.
+  authenticated non-staff can be redirected or receive a 403, depending on configuration.
 
 Important implementation detail
 - These mixins DO NOT subclass django.views.View directly. This keeps the "cooperative" super() chain predictable
@@ -23,7 +23,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from django.conf import settings
 from django.contrib.auth.mixins import (
     AccessMixin,
     LoginRequiredMixin,
@@ -31,6 +30,7 @@ from django.contrib.auth.mixins import (
 )
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, resolve_url
+from ...core.conf.post import LOGIN_REDIRECT_URL
 
 
 class AnonymousRequiredMixin(AccessMixin):
@@ -47,7 +47,7 @@ class AnonymousRequiredMixin(AccessMixin):
 
     Where the user is redirected:
     - If you set `redirect_url` on your view, we send them there.
-    - Otherwise we fall back to settings.LOGIN_REDIRECT_URL, or "/" if not set.
+    - Otherwise we fall back to LOGIN_REDIRECT_URL, or "/" if not set.
     - `redirect_url` can be:
         - a URL pattern name (e.g., "dashboard"),
         - a relative path ("/dashboard/"),
@@ -66,7 +66,7 @@ class AnonymousRequiredMixin(AccessMixin):
     """
 
     # Destination for already-authenticated users.
-    # If None: defaults to settings.LOGIN_REDIRECT_URL (or "/" as a final fallback).
+    # If None: defaults to LOGIN_REDIRECT_URL (or "/" as a final fallback).
     redirect_url: str | None = None
     request: HttpRequest
 
@@ -75,13 +75,13 @@ class AnonymousRequiredMixin(AccessMixin):
 
         We compute the target as:
         - self.redirect_url if you set it on the view; otherwise
-        - settings.LOGIN_REDIRECT_URL if defined; otherwise
+        - LOGIN_REDIRECT_URL if defined; otherwise
         - "/"
 
         We pass that value through django.shortcuts.resolve_url so it can be a URL name,
         a relative path, or a full URL, and it will be resolved to a usable URL string.
         """
-        to: str = self.redirect_url or getattr(settings, "LOGIN_REDIRECT_URL", "/")
+        to: str = self.redirect_url or LOGIN_REDIRECT_URL
         return resolve_url(to)
 
     def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
@@ -108,7 +108,7 @@ class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
         - returns a 403 Forbidden if you set `raise_exception = True` on the view.
 
     Customization knobs you can set on the view:
-    - login_url: where to send unauthenticated users (defaults to settings.LOGIN_URL).
+    - login_url: where to send unauthenticated users (defaults to LOGIN_URL).
     - redirect_field_name: the name of the "return here after login" parameter (defaults to "next").
     - raise_exception: if True, return a 403 instead of redirecting on failure (default False).
     - permission_denied_message: message used when raising 403.

@@ -1,18 +1,3 @@
-"""Management command: create
-
-Generates various project configuration files and secrets. Supports multiple
-generators including random secret keys, Vercel configuration files, and
-environment configuration files.
-
-Example:
-    tawala create random
-    tawala create random --no-clipboard
-    tawala create vercel
-    tawala create vercel --force
-    tawala create env
-    tawala create env --path /custom/path/.env --force --uncomment
-"""
-
 from typing import Any, cast
 
 from django.core.management.base import BaseCommand, CommandParser
@@ -26,33 +11,6 @@ from ..generators.file import (
 
 
 class Command(BaseCommand):
-    """Tawala management command for generating project configuration files and secrets.
-
-    This command provides multiple generators for setting up project files:
-    - random: Generate a random string suitable for Tawala SECRET_KEY
-    - vercel: Generate Vercel configuration (vercel.json)
-    - env: Generate environment configuration file (.env)
-
-    Examples:
-        # Generate a random secret key with clipboard copy
-        tawala create random
-
-        # Generate without copying to clipboard
-        tawala create random --no-clipboard
-
-        # Generate Vercel configuration
-        tawala create vercel
-
-        # Generate Vercel configuration, overwriting if it exists
-        tawala create vercel --force
-
-        # Generate .env file
-        tawala create env
-
-        # Generate .env file with custom path and options
-        tawala create env --path /custom/path/.env --force --uncomment
-    """
-
     help = "Generate various project configuration files and secrets."
     requires_system_checks: bool = cast(bool, [])
 

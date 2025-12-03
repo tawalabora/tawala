@@ -1,19 +1,13 @@
-"""ASCII art management for Tawala management commands.
-
-Provides centralized ASCII art rendering for various commands with
-terminal-responsive designs that adapt to terminal width.
-"""
-
 import shutil
 from enum import IntEnum, StrEnum
-
 from django.core.management.base import BaseCommand
+from ...core.conf.post import PKG_NAME
 
 
 class ArtType(StrEnum):
     """Enumeration of available ASCII art types."""
 
-    TAWALA = "tawala"
+    PROG_NAME = PKG_NAME
     DEV = "dev"
     BUILD = "build"
     INSTALL = "install"
@@ -31,11 +25,11 @@ class TerminalSize(IntEnum):
     THRESHOLD = 60
 
 
-class AsciiArtPrinter:
+class ArtPrinter:
     """Handles printing of ASCII art banners with terminal adaptation.
 
     Provides consistent formatting and styling for ASCII art across
-    different Tawala management commands.
+    different management commands.
     """
 
     def __init__(self, command: BaseCommand) -> None:
@@ -47,8 +41,8 @@ class AsciiArtPrinter:
         self.command = command
         self.terminal_width = shutil.get_terminal_size(fallback=(80, 24)).columns
 
-    def _get_tawala_art(self) -> list[str]:
-        """Get Tawala ASCII art based on terminal width.
+    def _get_prog_name_art(self) -> list[str]:
+        """Get ASCII art based on terminal width.
 
         Returns:
             List of strings representing the ASCII art lines.
@@ -78,7 +72,7 @@ class AsciiArtPrinter:
         Returns:
             List of strings representing the ASCII art lines.
         """
-        tawala_art = self._get_tawala_art()
+        prog_name_art = self._get_prog_name_art()
 
         if self.terminal_width >= TerminalSize.THRESHOLD:
             dev_art = [
@@ -97,7 +91,7 @@ class AsciiArtPrinter:
                 "",
             ]
 
-        return tawala_art + dev_art
+        return prog_name_art + dev_art
 
     def _get_build_art(self) -> list[str]:
         """Get Build ASCII art based on terminal width.
@@ -105,7 +99,7 @@ class AsciiArtPrinter:
         Returns:
             List of strings representing the ASCII art lines.
         """
-        tawala_art = self._get_tawala_art()
+        prog_name_art = self._get_prog_name_art()
 
         if self.terminal_width >= TerminalSize.THRESHOLD:
             build_art = [
@@ -124,7 +118,7 @@ class AsciiArtPrinter:
                 "",
             ]
 
-        return tawala_art + build_art
+        return prog_name_art + build_art
 
     def _get_install_art(self) -> list[str]:
         """Get Install ASCII art based on terminal width.
@@ -132,7 +126,7 @@ class AsciiArtPrinter:
         Returns:
             List of strings representing the ASCII art lines.
         """
-        tawala_art = self._get_tawala_art()
+        prog_name_art = self._get_prog_name_art()
 
         if self.terminal_width >= TerminalSize.THRESHOLD:
             install_art = [
@@ -151,7 +145,7 @@ class AsciiArtPrinter:
                 "",
             ]
 
-        return tawala_art + install_art
+        return prog_name_art + install_art
 
     def _get_art(self, art_type: ArtType) -> list[str]:
         """Get ASCII art lines for the specified type.
@@ -166,7 +160,7 @@ class AsciiArtPrinter:
             ValueError: If an unknown art type is provided.
         """
         art_getters = {
-            ArtType.TAWALA: self._get_tawala_art,
+            ArtType.PROG_NAME: self._get_prog_name_art,
             ArtType.DEV: self._get_dev_art,
             ArtType.BUILD: self._get_build_art,
             ArtType.INSTALL: self._get_install_art,

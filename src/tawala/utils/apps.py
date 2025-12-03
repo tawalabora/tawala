@@ -1,8 +1,10 @@
 from django.apps import AppConfig
 
+from ..core.conf.pre import PKG
 
-class TawalaUtilsConfig(AppConfig):
-    name = "tawala.utils"
+
+class UtilsConfig(AppConfig):
+    name = f"{PKG.name}.utils"
 
     def ready(self):
         # Remove runserver command

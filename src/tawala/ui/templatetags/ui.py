@@ -1,5 +1,4 @@
 from django import template
-from django.conf import settings
 from django.template import Context
 from django.utils.safestring import SafeString, mark_safe
 
@@ -34,7 +33,7 @@ def page_title(
     Note:
         Requires SITE_NAME setting to be set for the site name portion.
     """
-    site_name = getattr(settings, "SITE_NAME", "").strip()
+    site_name = ""
     title = name or context.get("page_title")
 
     full_title = (

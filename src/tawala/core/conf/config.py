@@ -1,110 +1,25 @@
+"""
+Note the order:
+- pre.py configures config.py, which in turns is used to configure settings.py.
+- We are using config.py to easily manage fetching of settings from either .env or pyproject.toml in the user's project directory
+- settings.py is then loaded by Django, from which, in post.py, we centralize the variables that are used within ui and utils.
+"""
+
 import os
-from pathlib import Path
-from typing import Any, Dict, NoReturn, Optional
+from typing import Any, Dict, Optional
 
-from ..utils.helpers import to_bool, to_list_of_str
-
-
-class NotBaseDirectoryError(Exception):
-    """Raised when the current directory is not a Tawala app base directory."""
-
-    pass
+from ...helpers import TypeConverter
+from .pre import PKG, PROJECT
 
 
-class Project:
-    """Directory path configuration and validation of Tawala app project structure."""
+class PackageConfig:
+    name = PKG.name
+    version = PKG.get_version()
+    dir = PKG.dir
 
-    _cached_base_dir: Optional[Path] = None
-    _cached_is_valid: Optional[bool] = None
-    _cached_toml_section: Optional[dict[str, Any]] = None
 
-    @classmethod
-    def _detect_base_dir(cls) -> tuple[Path, bool, Optional[dict[str, Any]]]:
-        """Detect if we're in a valid Tawala project and cache the results."""
-
-        cwd = Path.cwd()
-        pyproject_toml = cwd / "pyproject.toml"
-
-        if pyproject_toml.exists() and pyproject_toml.is_file():
-            import tomllib
-
-            with pyproject_toml.open("rb") as f:
-                toml_data = tomllib.load(f)
-
-                # check for [tool.tawala] section
-                toml_section: Optional[dict[str, Any]] = toml_data.get("tool", {}).get(
-                    "tawala", None
-                )
-                if toml_section is not None:
-                    return pyproject_toml.parent, True, toml_section
-                else:
-                    return cwd, False, None
-        else:
-            return cwd, False, None
-
-    @classmethod
-    def _get_base_dir_on_initial_load(cls) -> Path:
-        """
-        Get the Tawala app base directory or raise NotBaseDirectoryError.
-
-        Returns:
-            Path: The base directory of the Tawala app.
-
-        Raises:
-            NotBaseDirectoryError: If not in a valid Tawala app base directory.
-        """
-        if cls._cached_base_dir is None:
-            cls._cached_base_dir, cls._cached_is_valid, cls._cached_toml_section = (
-                cls._detect_base_dir()
-            )
-
-        if not cls._cached_is_valid:
-            raise NotBaseDirectoryError(
-                "Are you currently executing in a Tawala app base directory? "
-                "If not navigate to your app's root or "
-                "create a new Tawala app to run the command."
-            )
-
-        return cls._cached_base_dir
-
-    @classmethod
-    def get_base_dir_or_exit(cls) -> Path | NoReturn:
-        """Get the Tawala app base directory or exit with an error."""
-        try:
-            return cls._get_base_dir_on_initial_load()
-        except NotBaseDirectoryError as e:
-            import sys
-
-            from django.core.management.color import color_style
-
-            print(color_style().WARNING(str(e)))
-            sys.exit(1)
-
-    @classmethod
-    def get_base_dir(cls) -> Path:
-        """
-        * Only use when the base directory has already been validated.
-
-        Returns:
-            Path: The base directory.
-        """
-        if cls._cached_is_valid and cls._cached_base_dir is not None:
-            return cls._cached_base_dir
-        else:
-            return cls.get_base_dir_or_exit()
-
-    @classmethod
-    def get_toml_section(cls) -> dict[str, Any]:
-        """
-        * Only use when the pyproject.toml [tool.tawala] section has already been validated.
-
-        Returns:
-            dict[str, Any]: The [tool.tawala] section in pyproject.toml.
-        """
-        assert cls._cached_toml_section is not None, (
-            "Only use when the pyproject.toml [tool.tawala] section has already been validated."
-        )
-        return cls._cached_toml_section
+class ProjectConfig:
+    dir = PROJECT.get_base_dir()
 
 
 class ConfField:
@@ -173,11 +88,11 @@ class ConfField:
 
         # Handle boolean fields
         if self.name in self.BOOL_FIELDS:
-            return to_bool(value)
+            return TypeConverter.to_bool(value)
 
         # Handle list fields
         if self.name in self.LIST_FIELDS:
-            return to_list_of_str(value, str.lower)
+            return TypeConverter.to_list_of_str(value, str.lower)
 
         # Default: return as the value's type
         return value
@@ -219,7 +134,7 @@ class BaseConfig:
             return default
 
         # Navigate through nested keys
-        current = Project.get_toml_section()
+        current = PROJECT.get_toml_section()
         for k in key.split("."):
             if isinstance(current, dict) and k in current:
                 current = current[k]
@@ -334,3 +249,104 @@ class BaseConfig:
                 )
 
         return vars_info
+
+
+class SecurityConfig(BaseConfig):
+    """Security-related configuration settings."""
+
+    secret_key = ConfField(
+        env="SECRET_KEY",
+        toml="secret-key",
+    )
+    debug = ConfField(
+        env="DEBUG",
+        toml="debug",
+        default=True,
+    )
+    allowed_hosts = ConfField(
+        env="ALLOWED_HOSTS",
+        toml="allowed-hosts",
+    )
+
+
+class ApplicationConfig(BaseConfig):
+    """Application and URL configuration settings."""
+
+    configured_apps = ConfField(
+        env="CONFIGURED_APPS",
+        toml="configured-apps",
+    )
+
+
+class DatabaseConfig(BaseConfig):
+    """Database configuration settings."""
+
+    backend = ConfField(
+        env="DB_BACKEND",
+        toml="db.backend",
+        default="postgresql",
+    )
+    service = ConfField(env="DB_SERVICE", toml="db.service")
+    pool = ConfField(
+        env="DB_POOL",
+        toml="db.pool",
+        default=False,
+    )
+    ssl_mode = ConfField(
+        env="DB_SSL_MODE",
+        toml="db.ssl-mode",
+        default="prefer",
+    )
+    use_vars = ConfField(
+        env="DB_USE_VARS",
+        toml="db.use-vars",
+        default=False,
+    )
+
+    user = ConfField(env="DB_USER", default="postgres")
+    password = ConfField(env="DB_PASSWORD")
+    name = ConfField(env="DB_NAME", default="postgres")
+    host = ConfField(env="DB_HOST", default="localhost")
+    port = ConfField(env="DB_PORT", default="5432")
+
+
+class StorageConfig(BaseConfig):
+    """Storage configuration settings."""
+
+    backend = ConfField(
+        env="STORAGE_BACKEND",
+        toml="storage.backend",
+        default="filesystem",
+    )
+    token = ConfField(
+        env="BLOB_READ_WRITE_TOKEN",
+        toml="storage.token",
+    )
+
+
+class CommandsConfig(BaseConfig):
+    """Install/Build Commands to be executed settings."""
+
+    install = ConfField(
+        env="COMMANDS_INSTALL",
+        toml="commands.install",
+    )
+    build = ConfField(
+        env="COMMANDS_BUILD",
+        toml="commands.build",
+    )
+
+
+class TailwindCLIConfig(BaseConfig):
+    """Tailwind CLI configuration settings."""
+
+    path = ConfField(
+        env="TAILWIND_CLI_PATH",
+        toml="tailwind-cli.path",
+    )
+
+    version = ConfField(
+        env="TAILWIND_CLI_VERSION",
+        toml="tailwind-cli.version",
+        default="v4.1.17",
+    )

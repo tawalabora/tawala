@@ -12,14 +12,6 @@ if TYPE_CHECKING:
 class UsernameOrEmailBackend(ModelBackend):
     """
     Custom authentication backend that allows users to login with either username or email.
-
-    Usage:
-        Add to settings.py:
-
-        AUTHENTICATION_BACKENDS = [
-            'tawala.utils.backends.auth.UsernameOrEmailBackend',
-            'django.contrib.auth.backends.ModelBackend',  # default
-        ]
     """
 
     def authenticate(

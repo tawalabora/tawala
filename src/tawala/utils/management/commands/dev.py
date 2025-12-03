@@ -1,64 +1,18 @@
-"""Management command: dev
-
-Tawala development server with an enhanced user experience. Extends Django's
-runserver command with ASCII art, formatted output, local/network URLs,
-timezone information, and optional clipboard integration.
-
-Example:
-    tawala dev
-    tawala dev 8001
-    tawala dev --no-clipboard
-    tawala dev 0.0.0.0:9000 --no-clipboard
-"""
-
 import socket
 from typing import Any
 
-from django.conf import settings
 from django.contrib.staticfiles.management.commands.runserver import (
     Command as RunserverCommand,
 )
 from django.core.management.base import CommandParser
 from django.utils import timezone
 
-from ..arts import AsciiArtPrinter
+from ....core.conf.post import PKG_NAME, PKG_VERSION
+from ..art import ArtPrinter
 
 
 class Command(RunserverCommand):
-    """Tawala development server with enhanced UX.
-
-    Extends Django's runserver command with the following features:
-    - Colorful ASCII art banner
-    - Server address and version information
-    - Current date and timezone display
-    - Local network address detection
-    - Optional clipboard integration for server URL
-    - Terminal-responsive output (adapts to terminal width)
-
-    Attributes:
-        help: Command description.
-        _raw_ipv6: Whether the address is raw IPv6 format.
-        addr: Server address.
-        port: Server port.
-        protocol: HTTP protocol (http/https).
-        use_ipv6: Whether to use IPv6.
-        no_clipboard: Whether to disable clipboard copying.
-
-    Examples:
-        # Start development server on default address
-        tawala dev
-
-        # Start on specific port
-        tawala dev 8001
-
-        # Disable clipboard copying
-        tawala dev --no-clipboard
-
-        # Start on specific address and port
-        tawala dev 0.0.0.0:9000 --no-clipboard
-    """
-
-    help = "Tawala development server"
+    help = "Development server"
 
     # Declare parent class attributes for type checking
     _raw_ipv6: bool
@@ -71,7 +25,7 @@ class Command(RunserverCommand):
     def add_arguments(self, parser: CommandParser) -> None:
         """Add custom arguments to the command.
 
-        Extends the parent runserver arguments with Tawala-specific options.
+        Extends the parent runserver arguments with specific options.
 
         Args:
             parser: The argument parser to add arguments to.
@@ -100,9 +54,9 @@ class Command(RunserverCommand):
         return super().handle(*args, **options)
 
     def check_migrations(self) -> None:
-        """Check for unapplied migrations and display a warning.
+        f"""Check for unapplied migrations and display a warning.
 
-        Overrides Django's default check_migrations to use 'tawala migrate'
+        Overrides Django's default check_migrations to use '{PKG_NAME} migrate'
         instead of 'python manage.py migrate' in the warning message.
 
         Prints a notice if there are unapplied migrations that could affect
@@ -133,7 +87,7 @@ class Command(RunserverCommand):
                     }
                 )
             )
-            OVERRIDE = "tawala migrate"  # Only thing we're overriding
+            OVERRIDE = f"{PKG_NAME} migrate"  # Only thing we're overriding
             self.stdout.write(self.style.NOTICE(f"Run {OVERRIDE} to apply them."))
 
     def on_bind(self, server_port: int) -> None:
@@ -167,13 +121,13 @@ class Command(RunserverCommand):
         on whether the terminal is wide enough. Includes warning messages and
         control instructions appropriate for the terminal size.
         """
-        printer = AsciiArtPrinter(self)
+        printer = ArtPrinter(self)
         printer.print_dev_banner()
 
     def _print_server_info(self, server_port: int) -> None:
         """Print server and version information.
 
-        Displays the current date/time with timezone, Tawala version,
+        Displays the current date/time with timezone, version,
         local server address, and network address (if applicable).
 
         Args:
@@ -201,10 +155,10 @@ class Command(RunserverCommand):
             self.stdout.write(f"\n  📅 Date: {self.style.HTTP_NOT_MODIFIED(timestamp)}")
 
     def _print_version(self) -> None:
-        """Print Tawala version."""
-        version = getattr(settings, "TAWALA_VERSION", "unknown")
+        """Print version."""
+
         self.stdout.write(
-            f"  🔧 Tawala version: {self.style.HTTP_NOT_MODIFIED(version)}"
+            f"  🔧 {PKG_NAME.capitalize()} version: {self.style.HTTP_NOT_MODIFIED(PKG_VERSION)}"
         )
 
     def _print_local_url(self, server_port: int) -> None:

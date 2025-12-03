@@ -3,11 +3,6 @@
 Copies files or folders with their contents from one location to another.
 Automatically detects the source type and handles both file and directory
 copying with appropriate error handling and user prompts.
-
-Example:
-    tawala copy -i source.txt -o destination.txt
-    tawala copy --input templates/ --output project/templates/
-    tawala copy --source config.json --destination backup/config.json
 """
 
 import shutil
@@ -134,9 +129,6 @@ class DirectoryCopier(Copier):
     Example:
         copier = DirectoryCopier(command)
         copier.copy(Path("source_dir/"), Path("dest_dir/"))
-
-        # Will prompt if dest_dir already exists
-        # User can choose to overwrite or abort
     """
 
     def copy(self, source: Path, destination: Path) -> bool:
@@ -211,35 +203,6 @@ class DirectoryCopier(Copier):
 
 
 class Command(BaseCommand):
-    """Tawala management command for copying files and directories.
-
-    This command copies files or folders with their contents from a source
-    location to a destination location. Automatically detects whether the
-    source is a file or directory and uses the appropriate copy strategy.
-
-    Features:
-    - Copy individual files with metadata preservation
-    - Recursively copy entire directory structures
-    - Create parent directories as needed for file copies
-    - Prompt for confirmation when overwriting existing directories
-    - Comprehensive error handling with detailed messages
-
-    Examples:
-        # Copy a single file
-        tawala copy -i source.txt -o destination.txt
-
-        # Copy a directory
-        tawala copy --input templates/ --output project/templates/
-
-        # Using all available aliases
-        tawala copy --source config.json --destination backup/config.json
-
-        # Use from other management commands
-        from django.core.management import call_command
-        call_command('copy', source='templates/', destination='project/templates/')
-        call_command('copy', source='config.json', destination='backup/config.json')
-    """
-
     help = "Copy files or folders with their contents from one location to another."
     requires_system_checks: bool = cast(bool, [])
 

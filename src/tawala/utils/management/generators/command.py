@@ -1,4 +1,4 @@
-"""Base command generator for Tawala management commands.
+"""Base command generator for management commands.
 
 Provides a reusable framework for creating management commands that execute
 a series of configured commands with consistent output formatting and error handling.

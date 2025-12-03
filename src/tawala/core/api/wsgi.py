@@ -11,6 +11,8 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tawala.conf.settings")
+from ..conf.pre import PKG
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", f"{PKG.name}.core.conf.settings")
 
 application = get_wsgi_application()

@@ -1,21 +1,19 @@
-from typing import Any, Optional
+from typing import Optional
 
-from django.conf import settings
 from django.core.files.base import ContentFile, File
 from django.core.files.storage import Storage
 from django.utils.deconstruct import deconstructible
 from vercel.blob import BlobClient  # type: ignore[reportMissingTypeStubs]
+
+from ...core.conf.post import STORAGE_TOKEN
 
 
 @deconstructible
 class VercelBlobStorage(Storage):
     """Custom storage backend for Vercel Blob."""
 
-    storages_setting: dict[str, Any] = getattr(settings, "STORAGES", {})
-    token: str = storages_setting.get("token", "")
-
     def __init__(self) -> None:
-        self.client: BlobClient = BlobClient(self.token)
+        self.client: BlobClient = BlobClient(STORAGE_TOKEN)
 
     def _save(self, name: str, content: File) -> str:
         """Upload file to Vercel Blob"""
@@ -29,7 +27,6 @@ class VercelBlobStorage(Storage):
             content_type=getattr(content, "content_type", None),
         )
 
-        # Return the pathname for Tawala
         return result.pathname
 
     def _open(self, name: str, mode: str = "rb") -> ContentFile:
