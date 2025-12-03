@@ -1,7 +1,7 @@
 from . import base
 
 
-class SecurityConfig(base.Config):
+class SecurityConfig(base.BaseConfig):
     """Security-related configuration settings."""
 
     secret_key = base.ConfField(
@@ -19,7 +19,7 @@ class SecurityConfig(base.Config):
     )
 
 
-class ApplicationConfig(base.Config):
+class ApplicationConfig(base.BaseConfig):
     """Application and URL configuration settings."""
 
     configured_apps = base.ConfField(
@@ -28,7 +28,7 @@ class ApplicationConfig(base.Config):
     )
 
 
-class DatabaseConfig(base.Config):
+class DatabaseConfig(base.BaseConfig):
     """Database configuration settings."""
 
     backend = base.ConfField(
@@ -36,11 +36,7 @@ class DatabaseConfig(base.Config):
         toml="db.backend",
         default="postgresql",
     )
-    service = base.ConfField(
-        env="DB_SERVICE",
-        toml="db.service",
-        default="tawala-app"
-    )
+    service = base.ConfField(env="DB_SERVICE", toml="db.service", default="tawala-app")
     pool = base.ConfField(
         env="DB_POOL",
         toml="db.pool",
@@ -64,7 +60,7 @@ class DatabaseConfig(base.Config):
     port = base.ConfField(env="DB_PORT", default="5432")
 
 
-class StorageConfig(base.Config):
+class StorageConfig(base.BaseConfig):
     """Storage configuration settings."""
 
     backend = base.ConfField(
@@ -78,7 +74,7 @@ class StorageConfig(base.Config):
     )
 
 
-class CommandsConfig(base.Config):
+class CommandsConfig(base.BaseConfig):
     """Install/Build Commands to be executed settings."""
 
     install = base.ConfField(
@@ -91,7 +87,7 @@ class CommandsConfig(base.Config):
     )
 
 
-class TailwindCLIConfig(base.Config):
+class TailwindCLIConfig(base.BaseConfig):
     """Tailwind CLI configuration settings."""
 
     path = base.ConfField(

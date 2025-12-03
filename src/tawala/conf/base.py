@@ -14,7 +14,6 @@ class NotBaseDirectoryError(Exception):
 class Project:
     """Directory path configuration and validation of Tawala app project structure."""
 
-    tawala_package_dir = Path(__file__).resolve().parent.parent
     _cached_base_dir: Optional[Path] = None
     _cached_is_valid: Optional[bool] = None
     _cached_toml_section: Optional[dict[str, Any]] = None
@@ -194,7 +193,7 @@ class ConfField:
         )
 
 
-class Config:
+class BaseConfig:
     """Base configuration class that handles loading from environment variables and TOML files."""
 
     _toml_data: dict[str, Any] = {}
@@ -282,7 +281,7 @@ class Config:
 
             # Create property getter
             def make_getter(name: str, cfg: dict[str, Any], field: ConfField):
-                def getter(self: "Config") -> Any:
+                def getter(self: "BaseConfig") -> Any:
                     env_key = cfg["env"]
                     toml_key = cfg["toml"]
                     default = cfg["default"]
