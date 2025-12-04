@@ -1,5 +1,3 @@
-"""UI management command: tailwind"""
-
 import platform
 import stat
 import subprocess
@@ -10,8 +8,7 @@ from urllib.error import HTTPError, URLError
 from urllib.request import urlretrieve
 
 from django.core.management.base import BaseCommand, CommandError, CommandParser
-
-from ....core.conf.post import CLI_DIR, PKG_NAME, TAILWIND_CLI
+from tawala.core.conf.post import CLI_DIR, PKG_NAME, TAILWIND_CLI
 
 
 class Command(BaseCommand):

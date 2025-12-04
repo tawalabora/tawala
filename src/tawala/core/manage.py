@@ -4,8 +4,8 @@ import sys
 from typing import NoReturn, Optional
 
 from django.core.management import ManagementUtility
+from tawala.helpers import ExitCode, version_placeholder
 
-from ..helpers import ExitCode, version_placeholder
 from .conf.pre import PKG, PROJECT
 
 
