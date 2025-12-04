@@ -31,7 +31,7 @@ from django.contrib.auth.mixins import (
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, resolve_url
 
-from ....conf.post import LOGIN_REDIRECT_URL
+from ....conf.postload import LOGIN_REDIRECT_URL
 
 
 class AnonymousRequiredMixin(AccessMixin):

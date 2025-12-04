@@ -1,26 +1,27 @@
 """
 Note the order:
-- pre.py configures config.py, which in turns is used to configure settings.py.
-- We are using config.py to easily manage fetching of settings from either .env or pyproject.toml in the user's project directory
-- settings.py is then loaded by Django, from which, in post.py, we centralize the variables that are used within ui and utils.
+- `preload.py` configures `config.py`, which in turns is used to configure `settings.py`.
+- `preload.py` is used to load settings from `pyproject.toml` and passes it to `config.py`.
+- `config.py` chooses the which configurations - either from .env, pyproject.toml, or default - to settle on,
+- and then passes on the configs to `settings.py`.
+- `settings.py` is then loaded by Django, from which, in `postload.py`,
+- we centralize the variables that are used within core and components for easy tracking and management.
 """
 
-import os
-from typing import Any, Dict, Optional
+from os import environ
+from pathlib import Path
+from typing import Any, Dict, Optional, cast
 
 from christianwhocodes.helpers import TypeConverter
 
-from .pre import PKG, PROJECT
+from .preload import PKG, PROJECT
 
 
 class PackageConfig:
-    name = PKG.name
-    version = PKG.get_version()
-    dir = PKG.dir
-
-
-class ProjectConfig:
-    dir = PROJECT.get_base_dir()
+    def __init__(self) -> None:
+        self.name = PKG.name
+        self.dir = PKG.dir
+        self.version = PKG.version
 
 
 class ConfField:
@@ -109,11 +110,14 @@ class ConfField:
         )
 
 
-class BaseConfig:
+class ProjectConfig:
     """Base configuration class that handles loading from environment variables and TOML files."""
 
-    _toml_data: dict[str, Any] = {}
-    _config_specs: dict[str, dict[str, Any]] = {}
+    base_dir: Path = PROJECT.base_dir
+
+    def __init__(self) -> None:
+        self._toml_data: dict[str, Any] = {}
+        self._config_specs: dict[str, dict[str, Any]] = {}
 
     @classmethod
     def _get_from_toml(
@@ -131,14 +135,14 @@ class BaseConfig:
         Returns:
             The value from TOML, or the default if not found
         """
+
         if key is None:
             return default
 
-        # Navigate through nested keys
-        current = PROJECT.get_toml_section()
+        current: Any = PROJECT.toml_section
         for k in key.split("."):
             if isinstance(current, dict) and k in current:
-                current = current[k]
+                current = cast(Any, current[k])
             else:
                 return default
 
@@ -163,8 +167,8 @@ class BaseConfig:
             The configuration value from the first available source (raw, no casting)
         """
         # Try environment variable first (if env_key is provided and exists)
-        if env_key is not None and env_key in os.environ:
-            return os.environ[env_key]
+        if env_key is not None and env_key in environ:
+            return environ[env_key]
 
         # Fall back to TOML config and set default as it is the final fallback
         return cls._get_from_toml(toml_key, default=default)
@@ -197,7 +201,7 @@ class BaseConfig:
 
             # Create property getter
             def make_getter(name: str, cfg: dict[str, Any], field: ConfField):
-                def getter(self: "BaseConfig") -> Any:
+                def getter(self: "ProjectConfig") -> Any:
                     env_key = cfg["env"]
                     toml_key = cfg["toml"]
                     default = cfg["default"]
@@ -252,7 +256,7 @@ class BaseConfig:
         return vars_info
 
 
-class SecurityConfig(BaseConfig):
+class SecurityConfig(ProjectConfig):
     """Security-related configuration settings."""
 
     secret_key = ConfField(
@@ -270,7 +274,7 @@ class SecurityConfig(BaseConfig):
     )
 
 
-class ApplicationConfig(BaseConfig):
+class ApplicationConfig(ProjectConfig):
     """Application and URL configuration settings."""
 
     configured_apps = ConfField(
@@ -279,7 +283,7 @@ class ApplicationConfig(BaseConfig):
     )
 
 
-class DatabaseConfig(BaseConfig):
+class DatabaseConfig(ProjectConfig):
     """Database configuration settings."""
 
     backend = ConfField(
@@ -311,7 +315,7 @@ class DatabaseConfig(BaseConfig):
     port = ConfField(env="DB_PORT", default="5432")
 
 
-class StorageConfig(BaseConfig):
+class StorageConfig(ProjectConfig):
     """Storage configuration settings."""
 
     backend = ConfField(
@@ -325,7 +329,7 @@ class StorageConfig(BaseConfig):
     )
 
 
-class CommandsConfig(BaseConfig):
+class CommandsConfig(ProjectConfig):
     """Install/Build Commands to be executed settings."""
 
     install = ConfField(
@@ -338,7 +342,7 @@ class CommandsConfig(BaseConfig):
     )
 
 
-class TailwindCLIConfig(BaseConfig):
+class TailwindCLIConfig(ProjectConfig):
     """Tailwind CLI configuration settings."""
 
     path = ConfField(

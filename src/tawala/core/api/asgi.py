@@ -7,12 +7,12 @@ For more information on this file, see
 https://docs.djangoproject.com/en/stable/howto/deployment/asgi/
 """
 
-import os
+from os import environ
 
 from django.core.asgi import get_asgi_application
 
-from ...conf.pre import PKG
+from ...conf.preload import PKG
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", f"{PKG.name}.conf.settings")
+environ.setdefault("DJANGO_SETTINGS_MODULE", f"{PKG.name}.conf.settings")
 
 application = get_asgi_application()

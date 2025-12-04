@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
-from ...conf.pre import PKG
+from ...conf.preload import PKG
 
 
 class UIConfig(AppConfig):
