@@ -1,10 +1,11 @@
 """
-Only use variables from conf/config.py, not from pre.py, to configure.
-
 Note the order:
-- pre.py configures config.py, which in turns is used to configure settings.py.
-- We are using config.py to easily manage fetching of settings from either .env or pyproject.toml in the user's project directory
-- settings.py is then loaded by Django, from which, in post.py, we centralize the variables that are used within ui and utils.
+- `preload.py` configures `config.py`, which in turns is used to configure `settings.py`.
+- `preload.py` is used to load settings from `pyproject.toml` and passes it to `config.py`.
+- `config.py` chooses the which configurations - either from .env, pyproject.toml, or default - to settle on,
+- and then passes on the configs to `settings.py`.
+- `settings.py` is then loaded by Django, from which, in `postload.py`,
+- we centralize the variables that are used within core and components for easy tracking and management.
 """
 
 from pathlib import Path
@@ -12,44 +13,52 @@ from typing import Any, Literal
 
 from django.utils.csp import CSP  # type: ignore[reportMissingTypeStubs]
 
-from . import config
+from .config import (
+    ApplicationConfig,
+    CommandsConfig,
+    DatabaseConfig,
+    PackageConfig,
+    ProjectConfig,
+    SecurityConfig,
+    StorageConfig,
+    TailwindCLIConfig,
+)
 
 
 class Settings:
     """Main configuration class that orchestrates settings."""
 
-    def __init__(self):
-        self.package = config.PackageConfig
-        self.project = config.ProjectConfig
-        self.security = config.SecurityConfig()
-        self.apps = config.ApplicationConfig()
-        self.database = config.DatabaseConfig()
-        self.storage = config.StorageConfig()
-        self.tailwind_cli = config.TailwindCLIConfig()
-        self.commands = config.CommandsConfig()
+    def __init__(self) -> None:
+        self.package = PackageConfig()
+        self.project = ProjectConfig()
+        self.security = SecurityConfig()
+        self.apps = ApplicationConfig()
+        self.database = DatabaseConfig()
+        self.storage = StorageConfig()
+        self.tailwind_cli = TailwindCLIConfig()
+        self.commands = CommandsConfig()
 
 
-T = Settings()
+SETTINGS = Settings()
 
 # ==============================================================================
 # Package
 # ==============================================================================
 
-PKG_NAME = T.package.name
-PKG_DIR = T.package.dir
-PKG_VERSION = T.package.version
+PKG_NAME = SETTINGS.package.name
+PKG_DIR = SETTINGS.package.dir
+PKG_VERSION = SETTINGS.package.version
 
 
 # ==============================================================================
 # Project
 # ==============================================================================
 
-PROJECT_DIR = T.project.dir
-BASE_DIR = PROJECT_DIR
-APP_DIR = PROJECT_DIR / "app"
-API_DIR = PROJECT_DIR / "api"
-PUBLIC_DIR = PROJECT_DIR / "public"
-CLI_DIR = PROJECT_DIR / ".cli"
+BASE_DIR = SETTINGS.project.base_dir
+APP_DIR = BASE_DIR / "app"
+API_DIR = BASE_DIR / "api"
+PUBLIC_DIR = BASE_DIR / "public"
+CLI_DIR = BASE_DIR / ".cli"
 
 
 # ==============================================================================
@@ -57,9 +66,9 @@ CLI_DIR = PROJECT_DIR / ".cli"
 # See https://docs.djangoproject.com/en/stable/howto/deployment/checklist/
 # ==============================================================================
 
-SECRET_KEY: str = T.security.secret_key
-DEBUG: bool = T.security.debug
-ALLOWED_HOSTS: list[str] = T.security.allowed_hosts
+SECRET_KEY: str = SETTINGS.security.secret_key
+DEBUG: bool = SETTINGS.security.debug
+ALLOWED_HOSTS: list[str] = SETTINGS.security.allowed_hosts
 
 # Production security settings
 if not DEBUG:
@@ -89,7 +98,7 @@ INSTALLED_APPS: list[str] = [
     "django_watchfiles",
     f"{PKG_NAME}.components.utils",
     f"{PKG_NAME}.components.ui",
-    *T.apps.configured_apps,
+    *SETTINGS.apps.configured_apps,
     "app",
 ]
 
@@ -126,9 +135,9 @@ TEMPLATES: list[dict[str, Any]] = [
 # Commands
 # ==============================================================================
 
-COMMANDS_INSTALL: list[str] = T.commands.install
+COMMANDS_INSTALL: list[str] = SETTINGS.commands.install
 
-COMMANDS_BUILD: list[str] = T.commands.build
+COMMANDS_BUILD: list[str] = SETTINGS.commands.build
 
 
 # ==============================================================================
@@ -141,27 +150,29 @@ COMMANDS_BUILD: list[str] = T.commands.build
 
 def _get_database_config() -> dict[str, dict[str, Any]]:
     """Generate database configuration based on backend type."""
-    backend = T.database.backend.lower()
+    backend = SETTINGS.database.backend.lower()
 
     match backend:
         case "postgresql" | "postgres" | "psql" | "pgsql" | "pg" | "psycopg":  # Default
             options: dict[str, Any] = {
-                "pool": T.database.pool,
-                "sslmode": T.database.ssl_mode,
+                "pool": SETTINGS.database.pool,
+                "sslmode": SETTINGS.database.ssl_mode,
             }
 
             # Add service or connection vars
-            if T.database.use_vars:
+            if SETTINGS.database.use_vars:
                 config = {
-                    "USER": T.database.user,
-                    "PASSWORD": T.database.password,
-                    "NAME": T.database.name,
-                    "HOST": T.database.host,
-                    "PORT": T.database.port,
+                    "USER": SETTINGS.database.user,
+                    "PASSWORD": SETTINGS.database.password,
+                    "NAME": SETTINGS.database.name,
+                    "HOST": SETTINGS.database.host,
+                    "PORT": SETTINGS.database.port,
                 }
             else:
                 options["service"] = (
-                    T.database.service if T.database.service else f"{PKG_NAME}-app"
+                    SETTINGS.database.service
+                    if SETTINGS.database.service
+                    else f"{PKG_NAME}-app"
                 )
                 config = {}
 
@@ -177,7 +188,7 @@ def _get_database_config() -> dict[str, dict[str, Any]]:
             return {
                 "default": {
                     "ENGINE": "django.db.backends.sqlite3",
-                    "NAME": PROJECT_DIR / "db.sqlite3",
+                    "NAME": BASE_DIR / "db.sqlite3",
                 }
             }
 
@@ -193,8 +204,10 @@ DATABASES = _get_database_config()
 # ==============================================================================
 
 TAILWIND_CLI: dict[str, Any] = {
-    "PATH": T.tailwind_cli.path if T.tailwind_cli.path else CLI_DIR / "tailwindcss",
-    "VERSION": T.tailwind_cli.version,
+    "PATH": SETTINGS.tailwind_cli.path
+    if SETTINGS.tailwind_cli.path
+    else CLI_DIR / "tailwindcss" / "cli",
+    "VERSION": SETTINGS.tailwind_cli.version,
     "CSS": {
         "input": APP_DIR / "static" / "app" / "css" / "input.css",
         "output": PKG_DIR
@@ -226,7 +239,7 @@ STATIC_ROOT: Path = PUBLIC_DIR / "static"
 
 def _get_storage_config() -> dict[str, Any]:
     """Generate storage configuration based on backend type."""
-    backend = T.storage.backend.lower()
+    backend = SETTINGS.storage.backend.lower()
 
     base_config: dict[str, dict[str, str] | str] = {
         "staticfiles": {
@@ -254,7 +267,7 @@ def _get_storage_config() -> dict[str, Any]:
 
 
 STORAGES = _get_storage_config()
-STORAGE_TOKEN = (T.storage.token,)
+STORAGE_TOKEN = (SETTINGS.storage.token,)
 
 
 # ==============================================================================

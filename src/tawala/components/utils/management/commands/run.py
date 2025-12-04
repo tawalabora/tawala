@@ -9,7 +9,7 @@ from typing import Any
 
 from django.core.management.base import BaseCommand, CommandParser
 
-from .....conf.post import COMMANDS_BUILD, COMMANDS_INSTALL, PKG_NAME
+from .....conf.postload import COMMANDS_BUILD, COMMANDS_INSTALL, PKG_NAME
 from ..art import ArtPrinter, ArtType
 from ..generators.command import CommandGenerator, CommandOutput
 

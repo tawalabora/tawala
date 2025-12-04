@@ -4,9 +4,12 @@ These settings are used throughout ui and utils post initialization,
 Centralized here for easy management, ensuring that they are gotten from django.conf instead of own customized settings.py.
 
 Note the order:
-- pre.py configures config.py, which in turns is used to configure settings.py.
-- We are using config.py to easily manage fetching of settings from either .env or pyproject.toml in the user's project directory
-- settings.py is then loaded by Django, from which, in post.py, we centralize the variables that are used within ui and utils.
+- `preload.py` configures `config.py`, which in turns is used to configure `settings.py`.
+- `preload.py` is used to load settings from `pyproject.toml` and passes it to `config.py`.
+- `config.py` chooses the which configurations - either from .env, pyproject.toml, or default - to settle on, 
+- and then passes on the configs to `settings.py`.
+- `settings.py` is then loaded by Django, from which, in `postload.py`,
+- we centralize the variables that are used within core and components for easy tracking and management.
 """
 
 from django.conf import settings

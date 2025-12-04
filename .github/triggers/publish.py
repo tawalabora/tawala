@@ -2,7 +2,7 @@
 
 This script:
 - Reads repository metadata from pyproject.toml to build the Actions URL.
-- Obtains the current version via the `uv` CLI (`uv version --short`).
+- Obtains the current version from pyproject.toml.
 - Creates an annotated git tag named "v{version}" and pushes tags to origin,
     which triggers the workflow defined in .github/workflows/publish.yaml
     (configured to run on push tags and workflow_dispatch).
@@ -10,92 +10,92 @@ This script:
 Run with --dry or --dry-run to preview the git commands without executing them.
 """
 
-from __future__ import annotations
-
 from argparse import ArgumentParser, Namespace, RawDescriptionHelpFormatter
 from pathlib import Path
-from subprocess import CalledProcessError, CompletedProcess, run
+from subprocess import CalledProcessError, run
 from sys import exit
-from tomllib import TOMLDecodeError, load
-from typing import Any, NoReturn, Optional
+from tomllib import TOMLDecodeError
+from typing import NoReturn
 from urllib.parse import urlparse
 
-from christianwhocodes.colors import Text, colored_print
-from christianwhocodes.helpers import ExitCode
-
-
-class ProjectConfig:
-    """Read and cache project metadata from pyproject.toml"""
-
-    pyproject_path: Path
-    _config: Optional[dict[str, Any]]
-
-    def __init__(self, pyproject_path: Path) -> None:
-        self.pyproject_path = pyproject_path
-        self._config = None
-
-    @classmethod
-    def from_base_dir(cls) -> "ProjectConfig":
-        """Factory constructor using the project root directory"""
-        base = Path(__file__).resolve().parent.parent.parent
-        return cls(base / "pyproject.toml")
-
-    @property
-    def repo_url(self) -> str:
-        """Return repository URL from TOML (raises ValueError if missing)."""
-        if self._config is None:
-            with open(self.pyproject_path, "rb") as f:
-                self._config = load(f)
-
-        urls = self._config.get("project", {}).get("urls", {})
-        url = urls.get("repository")
-        if not url:
-            raise ValueError("No repository URL found in project.urls")
-        return url
-
-    def sanitize_repo_path(self) -> str:
-        """Strip trailing slashes and `.git` suffix."""
-        path = self.repo_url.rstrip("/")
-        if path.endswith(".git"):
-            path = path[:-4]
-        return path
-
-    def build_actions_url(self) -> str:
-        """Convert repo URL into GitHub Actions page URL; raises ValueError if not GitHub."""
-        parsed = urlparse(self.sanitize_repo_path())
-        if "github.com" not in parsed.netloc:
-            raise ValueError("Repository URL is not a GitHub URL")
-        return f"https://{parsed.netloc}{parsed.path}/actions"
-
-    def fetch_version(self) -> str:
-        """Get version from `uv` CLI. Raises CalledProcessError or ValueError."""
-        result: CompletedProcess[str] = run(
-            ["uv", "version", "--short"],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-        version = result.stdout.strip()
-        if not version:
-            raise ValueError("Version output was empty")
-        return version
+from christianwhocodes.helpers import ExitCode, PyProject
+from christianwhocodes.stdout import Text, print
 
 
 class GitPublisher:
     """Encapsulate git tagging and pushing"""
 
-    config: ProjectConfig
+    def __init__(self, pyproject: PyProject) -> None:
+        self.project = pyproject
 
-    def __init__(self, config: ProjectConfig) -> None:
-        self.config = config
+    # ---------------------------------------------------------
+    #   REPO URL EXTRACTION (FIXED)
+    # ---------------------------------------------------------
+    def _get_repo_url(self) -> str:
+        """
+        Return repository URL from pyproject.toml (raises KeyError if missing).
 
+        Supports:
+        - https://github.com/user/repo
+        - https://github.com/user/repo.git
+        - git@github.com:user/repo.git
+        """
+        urls = self.project.data.get("project", {}).get("urls", {})
+        url = urls.get("repository")
+
+        if not url:
+            raise KeyError("No repository URL found in project.urls")
+
+        return url
+
+    def _normalize_repo_url(self, raw: str) -> str:
+        """
+        Normalize Git remote URL into a uniform `https://github.com/user/repo`
+        format so we can build an Actions URL.
+
+        Handles:
+        - git@github.com:user/repo.git
+        - https://github.com/user/repo
+        - https://github.com/user/repo.git
+        """
+
+        raw = raw.strip()
+
+        # SSH-style: git@github.com:user/repo.git
+        if raw.startswith("git@github.com:"):
+            repo = raw.replace("git@github.com:", "")
+            repo = repo.removesuffix(".git")
+            return f"https://github.com/{repo}"
+
+        parsed = urlparse(raw)
+
+        # HTTPS URL but may have trailing .git or /
+        if "github.com" in parsed.netloc:
+            path = parsed.path.rstrip("/").removesuffix(".git")
+            return f"https://github.com{path}"
+
+        raise ValueError("Repository URL is not a GitHub URL")
+
+    def build_actions_url(self) -> str:
+        """
+        Build the GitHub Actions URL:
+
+          https://github.com/user/repo/actions
+        """
+        repo_url = self._get_repo_url()
+        norm = self._normalize_repo_url(repo_url)
+        return f"{norm}/actions"
+
+    # ---------------------------------------------------------
+    #   GIT OPERATIONS
+    # ---------------------------------------------------------
     def tag(self, version: str, dry: bool) -> str:
         """Create git tag and return tag string (e.g. 'v1.2.3')."""
         tag = f"v{version}"
         cmd = ["git", "tag", "-a", tag, "-m", f"Release {version}"]
 
         if dry:
-            colored_print(f"Would run: {' '.join(cmd)}", Text.WARNING)
+            print(f"Would run: {' '.join(cmd)}", Text.WARNING)
         else:
             run(cmd, check=True, capture_output=True, text=True)
 
@@ -105,65 +105,65 @@ class GitPublisher:
         """Push tags to origin."""
         cmd = ["git", "push", "origin", "--tags"]
         if dry:
-            colored_print("Would run: git push origin --tags", Text.WARNING)
+            print("Would run: git push origin --tags", Text.WARNING)
         else:
             run(cmd, check=True, capture_output=True, text=True)
 
 
+# =========================================================
+#   MAIN FLOW
+# =========================================================
 def tag_and_push(dry_run: bool = False) -> ExitCode:
     if dry_run:
-        colored_print("DRY RUN MODE - no changes will be made\n", Text.INFO)
+        print("DRY RUN MODE - no changes will be made\n", Text.INFO)
 
     try:
-        cfg = ProjectConfig.from_base_dir()
-        version = cfg.fetch_version()
-        actions_url = cfg.build_actions_url()
+        pyproject = PyProject(
+            Path(__file__).resolve().parent.parent.parent / "pyproject.toml"
+        )
 
-        pub = GitPublisher(cfg)
+        version = pyproject.version
+
+        pub = GitPublisher(pyproject)
+        actions_url = pub.build_actions_url()
+
         tag = pub.tag(version, dry_run)
         pub.push(dry_run)
 
     except FileNotFoundError as e:
-        # e.filename can be None; guard for that
         filename = getattr(e, "filename", None)
-        if filename:
-            colored_print(f"File not found: {filename}", Text.ERROR)
-        else:
-            colored_print("File not found", Text.ERROR)
+        print(f"File not found: {filename or ''}".strip(), Text.ERROR)
         return ExitCode.ERROR
 
     except CalledProcessError as e:
-        # e.cmd may be list[str] or None; format defensively
         cmd = " ".join(map(str, e.cmd)) if e.cmd else "<cmd>"
-        colored_print(f"Command failed: {cmd}", Text.ERROR)
-        colored_print(f"Return code: {e.returncode}", Text.ERROR)
+        print(f"Command failed: {cmd}", Text.ERROR)
+        print(f"Return code: {e.returncode}", Text.ERROR)
         if getattr(e, "stdout", None):
-            colored_print(f"stdout: {e.stdout}", Text.ERROR)
+            print(f"stdout: {e.stdout}", Text.ERROR)
         if getattr(e, "stderr", None):
-            colored_print(f"stderr: {e.stderr}", Text.ERROR)
+            print(f"stderr: {e.stderr}", Text.ERROR)
         return ExitCode.ERROR
 
     except TOMLDecodeError as e:
-        colored_print(f"Failed to parse pyproject.toml: {str(e)}", Text.ERROR)
+        print(f"Failed to parse pyproject.toml: {str(e)}", Text.ERROR)
         return ExitCode.ERROR
 
-    except ValueError as e:
-        colored_print(f"Configuration error: {str(e)}", Text.ERROR)
+    except (KeyError, ValueError) as e:
+        print(f"Configuration error: {str(e)}", Text.ERROR)
         return ExitCode.ERROR
 
     except Exception as e:
-        colored_print(f"Unexpected error: {str(e)}", Text.ERROR)
+        print(f"Unexpected error: {str(e)}", Text.ERROR)
         return ExitCode.ERROR
 
     else:
         if dry_run:
-            colored_print(f"Tag {tag} would be pushed successfully.", Text.SUCCESS)
-            colored_print("GitHub Actions workflow would trigger.", Text.SUCCESS)
+            print(f"Tag {tag} would be pushed successfully.", Text.SUCCESS)
+            print("GitHub Actions workflow would trigger.", Text.SUCCESS)
         else:
-            colored_print(f"Tag {tag} pushed successfully!", Text.SUCCESS)
-            colored_print(
-                [("Monitor workflow: ", Text.INFO), (actions_url, Text.HIGHLIGHT)]
-            )
+            print(f"Tag {tag} pushed successfully!", Text.SUCCESS)
+            print([("Monitor workflow: ", Text.INFO), (actions_url, Text.HIGHLIGHT)])
 
         return ExitCode.SUCCESS
 

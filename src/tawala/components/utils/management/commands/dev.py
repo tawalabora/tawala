@@ -1,4 +1,4 @@
-import socket
+from socket import gaierror, gethostbyname, gethostname
 from typing import Any
 
 from django.contrib.staticfiles.management.commands.runserver import (
@@ -7,7 +7,7 @@ from django.contrib.staticfiles.management.commands.runserver import (
 from django.core.management.base import CommandParser
 from django.utils import timezone
 
-from .....conf.post import PKG_NAME, PKG_VERSION
+from .....conf.postload import PKG_NAME, PKG_VERSION
 from ..art import ArtPrinter
 
 
@@ -198,13 +198,13 @@ class Command(RunserverCommand):
             server_port: The port the server is bound to.
         """
         try:
-            hostname = socket.gethostname()
-            local_ip = socket.gethostbyname(hostname)
+            hostname = gethostname()
+            local_ip = gethostbyname(hostname)
             network_url = f"{self.protocol}://{local_ip}:{server_port}/"
             self.stdout.write(
                 f"  🌍 Network address: {self.style.SUCCESS(network_url)}"
             )
-        except socket.gaierror:
+        except gaierror:
             pass
 
     def _copy_to_clipboard(self, server_port: int) -> None:
@@ -217,12 +217,12 @@ class Command(RunserverCommand):
             server_port: The port the server is bound to.
         """
         try:
-            import pyperclip
+            from pyperclip import copy
 
             addr = self._format_address()
             url = f"{self.protocol}://{addr}:{server_port}/"
 
-            pyperclip.copy(url)
+            copy(url)
             self.stdout.write(f"  📋 {self.style.SUCCESS('Copied to clipboard!')}")
         except ImportError:
             self.stdout.write(

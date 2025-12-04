@@ -1,10 +1,9 @@
-import shutil
-
 from enum import IntEnum, StrEnum
+from shutil import get_terminal_size
 
 from django.core.management.base import BaseCommand
 
-from ....conf.post import PKG_NAME
+from ....conf.postload import PKG_NAME
 
 
 class ArtType(StrEnum):
@@ -42,7 +41,7 @@ class ArtPrinter:
             command: The Django BaseCommand instance for stdout/styling.
         """
         self.command = command
-        self.terminal_width = shutil.get_terminal_size(fallback=(80, 24)).columns
+        self.terminal_width = get_terminal_size(fallback=(80, 24)).columns
 
     def _get_prog_name_art(self) -> list[str]:
         """Get ASCII art based on terminal width.

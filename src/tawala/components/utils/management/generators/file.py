@@ -1,5 +1,5 @@
-import json
 from abc import ABC, abstractmethod
+from json import dumps
 from pathlib import Path
 from typing import Any, List, TypedDict, cast
 
@@ -7,7 +7,7 @@ from django.core.management.base import BaseCommand
 from django.core.management.utils import get_random_secret_key
 
 from .....conf import config
-from .....conf.post import BASE_DIR, PKG_NAME
+from .....conf.postload import BASE_DIR, PKG_NAME
 
 
 class FileGenerator(ABC):
@@ -77,9 +77,9 @@ class RandomStringGenerator(FileGenerator):
             text: The text to copy to the clipboard.
         """
         try:
-            import pyperclip
+            from pyperclip import copy
 
-            pyperclip.copy(text)
+            copy(text)
             self.command.stdout.write(
                 self.command.style.SUCCESS("Copied to clipboard successfully.")
             )
@@ -161,7 +161,7 @@ class VercelJSONFileGenerator(FileGenerator):
         }
 
         try:
-            json_text: str = json.dumps(content, indent=2)
+            json_text: str = dumps(content, indent=2)
             vercel_path.write_text(json_text, encoding="utf-8")
 
             self.command.stdout.write(
@@ -274,7 +274,7 @@ class EnvFileGenerator(FileGenerator):
             The complete .env file content as a string.
         """
 
-        config_classes: list[tuple[str, type[config.BaseConfig]]] = [
+        config_classes: list[tuple[str, type[config.ProjectConfig]]] = [
             ("Security", config.SecurityConfig),
             ("Application", config.ApplicationConfig),
             ("Database", config.DatabaseConfig),

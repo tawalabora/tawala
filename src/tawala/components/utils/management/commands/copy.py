@@ -5,9 +5,9 @@ Automatically detects the source type and handles both file and directory
 copying with appropriate error handling and user prompts.
 """
 
-import shutil
 from abc import ABC, abstractmethod
 from pathlib import Path
+from shutil import copy2, copytree, rmtree
 from typing import Any, cast
 
 from django.core.management.base import BaseCommand, CommandParser
@@ -96,7 +96,7 @@ class FileCopier(Copier):
 
         try:
             destination.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, destination)
+            copy2(source, destination)
             self.command.stdout.write(
                 self.command.style.SUCCESS(
                     f"File copied successfully from {source} to {destination}"
@@ -161,9 +161,9 @@ class DirectoryCopier(Copier):
                         self.command.style.WARNING("Copy aborted.")
                     )
                     return False
-                shutil.rmtree(destination)
+                rmtree(destination)
 
-            shutil.copytree(source, destination, dirs_exist_ok=False)
+            copytree(source, destination, dirs_exist_ok=False)
             self.command.stdout.write(
                 self.command.style.SUCCESS(
                     f"Directory copied successfully from {source} to {destination}"
