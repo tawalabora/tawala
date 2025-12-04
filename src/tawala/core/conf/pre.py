@@ -4,8 +4,8 @@ The PKG and PROJECT variables are used to configure the following files which ar
 
 - core/manage.py
 - core/conf/config.py
-- core/api/[*]sgi.py
-- [ui | utils]/apps.py
+- core/api/[a|w]sgi.py
+- components/[ui|utils]/apps.py
 
 * Do not use them in any other file
 
@@ -19,7 +19,7 @@ from pathlib import Path
 
 from typing import Any, Literal, NoReturn, Optional
 
-from ...helpers import version_placeholder
+from tawala.helpers import version_placeholder
 
 
 class _Package:

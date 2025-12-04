@@ -4,14 +4,14 @@ build-backend = "uv_build"
 
 [project]
 name = "tawala"
-version = "1.0.8.dev3"
+version = "1.0.9.dev2"
 description = ""
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [{ name = "christianwhocodes", email = "kevin@tawalabora.space" }]
 requires-python = ">=3.12"
 dependencies = [
-    "django>=6.0rc1",
+    "django>=6.0",
     "django-browser-reload>=1.21.0",
     "django-watchfiles>=1.4.0",
     "pyperclip>=1.11.0",
@@ -30,7 +30,7 @@ twl = "tawala.core.manage:main"
 dev = [
     "djlint>=1.36.4",
     "pillow>=12.0.0",
-    "psycopg[binary,pool]>=3.2.13",
+    "psycopg[binary,pool]>=3.3.1",
     "vercel>=0.3.5",
 ]
 

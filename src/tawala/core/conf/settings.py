@@ -86,8 +86,8 @@ INSTALLED_APPS: list[str] = [
     "django.contrib.staticfiles",
     "django_browser_reload",
     "django_watchfiles",
-    f"{PKG_NAME}.utils",
-    f"{PKG_NAME}.ui",
+    f"{PKG_NAME}.components.utils",
+    f"{PKG_NAME}.components.ui",
     *T.apps.configured_apps,
     "app",
 ]
@@ -196,7 +196,13 @@ TAILWIND_CLI: dict[str, Any] = {
     "VERSION": T.tailwind_cli.version,
     "CSS": {
         "input": APP_DIR / "static" / "app" / "css" / "input.css",
-        "output": PKG_DIR / "ui" / "static" / "ui" / "css" / "output.css",
+        "output": PKG_DIR
+        / "components"
+        / "ui"
+        / "static"
+        / "ui"
+        / "css"
+        / "output.css",
     },
 }
 
@@ -235,7 +241,9 @@ def _get_storage_config() -> dict[str, Any]:
             MEDIA_ROOT = PUBLIC_DIR / "media"
 
         case "vercel" | "vercelblob" | "vercel_blob" | "vercel-blob":
-            storage_backend = f"{PKG_NAME}.utils.backends.storage.VercelBlobStorage"
+            storage_backend = (
+                f"{PKG_NAME}.components.utils.backends.storage.VercelBlobStorage"
+            )
 
         case _:
             raise ValueError(f"Unsupported storage backend: {backend}")

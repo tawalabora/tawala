@@ -1,7 +1,9 @@
 import shutil
+
 from enum import IntEnum, StrEnum
+
 from django.core.management.base import BaseCommand
-from ...core.conf.post import PKG_NAME
+from tawala.core.conf.post import PKG_NAME
 
 
 class ArtType(StrEnum):
