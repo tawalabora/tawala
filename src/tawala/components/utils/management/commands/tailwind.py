@@ -8,7 +8,7 @@ from urllib.request import urlretrieve
 
 from django.core.management.base import BaseCommand, CommandError, CommandParser
 
-from .....core.app.postsettings import CLI_DIR, PKG_NAME, TAILWIND_CLI
+from .....core.app.postsettings import PKG_NAME, TAILWIND_CLI
 
 
 class Command(BaseCommand):
@@ -43,7 +43,7 @@ class Command(BaseCommand):
             "--use-cache",
             dest="use_cache",
             action="store_true",
-            help="If Tailwind CLI already exists in CLI_DIR, skip prompt and skip downloading without overwriting (even when -y is used).",
+            help="If Tailwind CLI already exists, skip prompt and skip downloading without overwriting (even when -y is used).",
         )
 
     def _get_platform_info(self) -> tuple[str, str]:
@@ -161,9 +161,8 @@ class Command(BaseCommand):
             f"Detected platform: {self.style.SUCCESS(f'{platform_name}-{architecture}')}"
         )
 
-        folder: Path = CLI_DIR
-        folder.mkdir(parents=True, exist_ok=True)
-        tailwind_cli_path = folder / "tailwindcss" / "cli"
+        tailwind_cli_path: Path = tailwind_config["PATH"]
+        tailwind_cli_path.mkdir(parents=True, exist_ok=True)
         tailwind_cli_version: str = tailwind_config["VERSION"]
         download_url: str = self._get_download_url(
             tailwind_cli_version, platform_name, architecture
