@@ -5,7 +5,7 @@ from typing import Any, TypedDict, cast
 
 from django.core.management.base import BaseCommand, CommandParser
 
-from .....core.app.postsettings import BASE_DIR, PKG_NAME
+from .... import BASE_DIR, PKG_NAME
 
 
 class FileGenerator(ABC):
