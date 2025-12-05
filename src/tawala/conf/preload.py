@@ -5,8 +5,8 @@ loaded before app and settings initialization:
 
 - cli.py
 - conf/config.py
-- core/api/{a|w}sgi.py
-- components/{ui|utils}/apps.py
+- core/__api__/{a|w}sgi.py
+- components/u{i|tils}/apps.py
 
 * Do not use them in any other file
 

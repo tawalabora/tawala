@@ -274,15 +274,6 @@ class SecurityConfig(ProjectConfig):
     )
 
 
-class ApplicationConfig(ProjectConfig):
-    """Application and URL configuration settings."""
-
-    configured_apps = ConfField(
-        env="CONFIGURED_APPS",
-        toml="configured-apps",
-    )
-
-
 class DatabaseConfig(ProjectConfig):
     """Database configuration settings."""
 

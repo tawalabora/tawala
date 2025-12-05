@@ -14,7 +14,6 @@ from typing import Any, Literal
 from django.utils.csp import CSP  # type: ignore[reportMissingTypeStubs]
 
 from .config import (
-    ApplicationConfig,
     CommandsConfig,
     DatabaseConfig,
     PackageConfig,
@@ -32,7 +31,6 @@ class Settings:
         self.package = PackageConfig()
         self.project = ProjectConfig()
         self.security = SecurityConfig()
-        self.apps = ApplicationConfig()
         self.database = DatabaseConfig()
         self.storage = StorageConfig()
         self.tailwind_cli = TailwindCLIConfig()
@@ -82,10 +80,9 @@ if not DEBUG:
 # Application definition
 # ==============================================================================
 
-ROOT_URLCONF = f"{PKG_NAME}.core.app.urls"
+ROOT_URLCONF = f"{PKG_NAME}.core.__app__.urls"
 
-ASGI_APPLICATION = f"{PKG_NAME}.core.api.asgi.application"
-WSGI_APPLICATION = f"{PKG_NAME}.core.api.wsgi.application"
+WSGI_APPLICATION = f"{PKG_NAME}.core.__api__.wsgi.application"
 
 INSTALLED_APPS: list[str] = [
     "django.contrib.admin",
@@ -96,10 +93,10 @@ INSTALLED_APPS: list[str] = [
     "django.contrib.staticfiles",
     "django_browser_reload",
     "django_watchfiles",
+    "tawala.core.__app__",
+    "app",
     f"{PKG_NAME}.components.utils",
     f"{PKG_NAME}.components.ui",
-    *SETTINGS.apps.configured_apps,
-    "app",
 ]
 
 MIDDLEWARE: list[str] = [
