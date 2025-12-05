@@ -11,7 +11,7 @@ from os import environ
 
 from django.core.asgi import get_asgi_application
 
-from ... import PKG
+from .. import PKG
 
 environ.setdefault("DJANGO_SETTINGS_MODULE", f"{PKG.name}.core.app.settings")
 

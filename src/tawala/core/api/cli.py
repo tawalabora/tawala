@@ -7,7 +7,7 @@ from typing import NoReturn, Optional
 from christianwhocodes.helpers import ExitCode, version_placeholder
 from django.core.management import ManagementUtility
 
-from ... import PKG, PROJECT
+from .. import PKG, PROJECT
 
 
 def main() -> Optional[NoReturn]:

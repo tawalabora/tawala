@@ -3,7 +3,7 @@ from shutil import get_terminal_size
 
 from django.core.management.base import BaseCommand
 
-from ....core.app.postsettings import PKG_NAME
+from ... import PKG_NAME
 
 
 class ArtType(StrEnum):

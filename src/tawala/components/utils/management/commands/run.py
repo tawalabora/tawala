@@ -12,7 +12,7 @@ from typing import Any
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError, CommandParser
 
-from .....core.app.postsettings import COMMANDS_BUILD, COMMANDS_INSTALL, PKG_NAME
+from .... import COMMANDS_BUILD, COMMANDS_INSTALL, PKG_NAME
 from ..art import ArtPrinter, ArtType
 
 

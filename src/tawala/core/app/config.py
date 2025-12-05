@@ -4,7 +4,7 @@ from typing import Any, Dict, Optional, cast
 
 from christianwhocodes.helpers import TypeConverter
 
-from ... import PKG, PROJECT
+from .. import PKG, PROJECT
 
 
 class PackageConfig:
@@ -28,8 +28,8 @@ class ConfField:
     """
 
     # Define which fields need special type handling
-    BOOL_FIELDS = {"debug", "pool", "use_vars"}
-    LIST_FIELDS = {"allowed_hosts", "configured_apps", "commands"}
+    _BOOL_FIELDS = {"debug", "pool", "use_vars"}
+    _LIST_FIELDS = {"allowed_hosts", "configured_apps", "commands"}
 
     def __init__(
         self,
@@ -46,7 +46,8 @@ class ConfField:
         """Store the attribute name for type conversion."""
         self.name = name
 
-    def to_dict(self) -> Dict[str, Any]:
+    @property
+    def dict(self) -> Dict[str, Any]:
         """
         Convert the ConfField to the dictionary format expected by BaseConfig.
 
@@ -60,7 +61,8 @@ class ConfField:
             "name": self.name,
         }
 
-    def convert_value(self, value: Any) -> Any:
+    @staticmethod
+    def convert_value(name: str, value: Any) -> Any:
         """
         Convert the raw value to the appropriate type based on field name.
 
@@ -72,18 +74,18 @@ class ConfField:
         """
         # Handle None values with sensible defaults
         if value is None:
-            if self.name in self.BOOL_FIELDS:
+            if name in ConfField._BOOL_FIELDS:
                 return False
-            if self.name in self.LIST_FIELDS:
+            if name in ConfField._LIST_FIELDS:
                 return []
             return ""
 
         # Handle boolean fields
-        if self.name in self.BOOL_FIELDS:
+        if name in ConfField._BOOL_FIELDS:
             return TypeConverter.to_bool(value)
 
         # Handle list fields
-        if self.name in self.LIST_FIELDS:
+        if name in ConfField._LIST_FIELDS:
             return TypeConverter.to_list_of_str(value, str.lower)
 
         # Default: return as the value's type
@@ -103,15 +105,14 @@ class ConfField:
 class ProjectConfig:
     """Base configuration class that handles loading from environment variables and TOML files."""
 
-    base_dir: Path = PROJECT.base_dir
+    _toml_data: dict[str, Any] = {}
+    _config_specs: dict[str, dict[str, Any]] = {}
 
     def __init__(self) -> None:
-        self._toml_data: dict[str, Any] = {}
-        self._config_specs: dict[str, dict[str, Any]] = {}
+        self.base_dir: Path = PROJECT.base_dir
 
-    @classmethod
+    @staticmethod
     def _get_from_toml(
-        cls,
         key: Optional[str],
         default: Any = None,
     ) -> Any:
@@ -184,7 +185,7 @@ class ProjectConfig:
             if not isinstance(attr_value, ConfField):
                 continue
 
-            config_dict = attr_value.to_dict()
+            config_dict = attr_value.dict
 
             # Store the configuration spec for this field
             cls._config_specs[attr_name] = config_dict
@@ -195,10 +196,11 @@ class ProjectConfig:
                     env_key = cfg["env"]
                     toml_key = cfg["toml"]
                     default = cfg["default"]
+                    name = cfg["name"]
                     raw_value = self._fetch_value(env_key, toml_key, default)
 
                     # Convert to the appropriate type
-                    return field.convert_value(raw_value)
+                    return field.convert_value(name, raw_value)
 
                 return getter
 

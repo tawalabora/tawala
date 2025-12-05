@@ -3,7 +3,7 @@ from typing import Any, Literal
 
 from django.utils.csp import CSP  # type: ignore[reportMissingTypeStubs]
 
-from .presettings import (
+from .config import (
     CommandsConfig,
     DatabaseConfig,
     PackageConfig,
