@@ -3,13 +3,13 @@ from shutil import get_terminal_size
 
 from django.core.management.base import BaseCommand
 
-from ... import PKG_NAME
+from ... import PKG_NAME_SETTING
 
 
 class ArtType(StrEnum):
     """Enumeration of available ASCII art types."""
 
-    PROG_NAME = PKG_NAME
+    PROG_NAME = PKG_NAME_SETTING
     DEV = "dev"
     BUILD = "build"
     INSTALL = "install"

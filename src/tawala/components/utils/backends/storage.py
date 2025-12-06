@@ -5,7 +5,7 @@ from django.core.files.storage import Storage
 from django.utils.deconstruct import deconstructible
 from vercel.blob import BlobClient  # type: ignore[reportMissingTypeStubs]
 
-from ... import STORAGE_TOKEN
+from ... import STORAGE_TOKEN_SETTING
 
 
 @deconstructible
@@ -13,7 +13,7 @@ class VercelBlobStorage(Storage):
     """Custom storage backend for Vercel Blob."""
 
     def __init__(self) -> None:
-        self.client: BlobClient = BlobClient(STORAGE_TOKEN)
+        self.client: BlobClient = BlobClient(STORAGE_TOKEN_SETTING)
 
     def _save(self, name: str, content: File) -> str:
         """Upload file to Vercel Blob"""

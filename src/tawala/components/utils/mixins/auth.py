@@ -31,7 +31,7 @@ from django.contrib.auth.mixins import (
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, resolve_url
 
-from ... import LOGIN_REDIRECT_URL
+from ... import LOGIN_REDIRECT_URL_SETTING
 
 
 class AnonymousRequiredMixin(AccessMixin):
@@ -82,7 +82,7 @@ class AnonymousRequiredMixin(AccessMixin):
         We pass that value through django.shortcuts.resolve_url so it can be a URL name,
         a relative path, or a full URL, and it will be resolved to a usable URL string.
         """
-        to: str = self.redirect_url or LOGIN_REDIRECT_URL
+        to: str = self.redirect_url or LOGIN_REDIRECT_URL_SETTING
         return resolve_url(to)
 
     def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:

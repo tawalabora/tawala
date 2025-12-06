@@ -7,7 +7,7 @@ from django.contrib.staticfiles.management.commands.runserver import (
 from django.core.management.base import CommandParser
 from django.utils import timezone
 
-from .... import PKG_NAME, PKG_VERSION
+from .... import PKG_NAME_SETTING, PKG_VERSION_SETTING
 from ..art import ArtPrinter
 
 
@@ -56,7 +56,7 @@ class Command(RunserverCommand):
     def check_migrations(self) -> None:
         f"""Check for unapplied migrations and display a warning.
 
-        Overrides Django's default check_migrations to use '{PKG_NAME} migrate'
+        Overrides Django's default check_migrations to use '{PKG_NAME_SETTING} migrate'
         instead of 'python manage.py migrate' in the warning message.
 
         Prints a notice if there are unapplied migrations that could affect
@@ -87,7 +87,7 @@ class Command(RunserverCommand):
                     }
                 )
             )
-            OVERRIDE = f"{PKG_NAME} migrate"  # Only thing we're overriding
+            OVERRIDE = f"{PKG_NAME_SETTING} migrate"  # Only thing we're overriding
             self.stdout.write(self.style.NOTICE(f"Run {OVERRIDE} to apply them."))
 
     def on_bind(self, server_port: int) -> None:
@@ -158,7 +158,7 @@ class Command(RunserverCommand):
         """Print version."""
 
         self.stdout.write(
-            f"  🔧 {PKG_NAME.capitalize()} version: {self.style.HTTP_NOT_MODIFIED(PKG_VERSION)}"
+            f"  🔧 {PKG_NAME_SETTING.capitalize()} version: {self.style.HTTP_NOT_MODIFIED(PKG_VERSION_SETTING)}"
         )
 
     def _print_local_url(self, server_port: int) -> None:
