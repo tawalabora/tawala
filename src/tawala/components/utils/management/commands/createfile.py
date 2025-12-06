@@ -5,7 +5,7 @@ from typing import Any, TypedDict, cast
 
 from django.core.management.base import BaseCommand, CommandParser
 
-from .... import BASE_DIR, PKG_NAME
+from .... import BASE_DIR_SETTING, PKG_NAME_SETTING
 
 
 class FileGenerator(ABC):
@@ -84,7 +84,7 @@ class VercelJSONFileGenerator(FileGenerator):
             **options: Command options including:
                 - force (bool): If True, overwrite existing files without prompting.
         """
-        vercel_path = BASE_DIR / "vercel.json"
+        vercel_path = BASE_DIR_SETTING / "vercel.json"
 
         # Check if file exists and handle accordingly
         if vercel_path.exists() and not options.get("force", False):
@@ -98,8 +98,8 @@ class VercelJSONFileGenerator(FileGenerator):
 
         content: VercelConfig = {
             "$schema": "https://openapi.vercel.sh/vercel.json",
-            "installCommand": f"uv run {PKG_NAME} run install",
-            "buildCommand": f"uv run {PKG_NAME} run build",
+            "installCommand": f"uv run {PKG_NAME_SETTING} run install",
+            "buildCommand": f"uv run {PKG_NAME_SETTING} run build",
             "rewrites": [{"source": "/(.*)", "destination": "/api/asgi"}],
         }
 

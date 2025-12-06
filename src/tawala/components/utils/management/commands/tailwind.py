@@ -8,7 +8,7 @@ from urllib.request import urlretrieve
 
 from django.core.management.base import BaseCommand, CommandError, CommandParser
 
-from .... import PKG_NAME, TAILWIND_CLI
+from .... import PKG_NAME_SETTING, TAILWIND_CLI_SETTING
 
 
 class Command(BaseCommand):
@@ -254,7 +254,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("✓ Tailwind CSS built successfully!"))
         except FileNotFoundError:
             raise CommandError(
-                f"Tailwind CLI not found at '{tailwind_cli_path}'. Run {PKG_NAME} tailwind --install first."
+                f"Tailwind CLI not found at '{tailwind_cli_path}'. Run {PKG_NAME_SETTING} tailwind --install first."
             )
         except CalledProcessError as e:
             raise CommandError(f"Tailwind CSS build failed: {e}")
@@ -262,7 +262,7 @@ class Command(BaseCommand):
             raise CommandError(f"Unexpected error: {e}")
 
     def handle(self, *args: Any, **options: Any) -> None:
-        tailwind_config = TAILWIND_CLI
+        tailwind_config = TAILWIND_CLI_SETTING
         # Validate that use_cache is not used with build
         if options["build"] and options.get("use_cache", False):
             raise CommandError(

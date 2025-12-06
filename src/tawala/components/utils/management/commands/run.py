@@ -12,7 +12,7 @@ from typing import Any
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError, CommandParser
 
-from .... import COMMANDS_BUILD, COMMANDS_INSTALL, PKG_NAME
+from .... import COMMANDS_BUILD_SETTING, COMMANDS_INSTALL_SETTING, PKG_NAME_SETTING
 from ..art import ArtPrinter, ArtType
 
 
@@ -356,7 +356,7 @@ class Output(CommandOutput):
         )
         self.command.stdout.write(
             self.command.style.WARNING(
-                f"   Define {mode} commands in your '.env' file or in pyproject.toml [tool.{PKG_NAME}] section:\n"
+                f"   Define {mode} commands in your '.env' file or in pyproject.toml [tool.{PKG_NAME_SETTING}] section:\n"
             )
         )
         self.command.stdout.write("")
@@ -472,7 +472,7 @@ class BuildCommandGenerator(CommandGenerator):
 
     def get_commands_from_settings(self) -> list[str]:
         """Retrieve build commands."""
-        return COMMANDS_BUILD
+        return COMMANDS_BUILD_SETTING
 
     def create_output_handler(self) -> CommandOutput:
         """Create the output handler for build commands."""
@@ -488,7 +488,7 @@ class InstallCommandGenerator(CommandGenerator):
 
     def get_commands_from_settings(self) -> list[str]:
         """Retrieve install commands."""
-        return COMMANDS_INSTALL
+        return COMMANDS_INSTALL_SETTING
 
     def create_output_handler(self) -> CommandOutput:
         """Create the output handler for install commands."""
