@@ -15,7 +15,7 @@ def main() -> Optional[NoReturn]:
     f"""Main entry point for the {PKG.name.capitalize()} CLI."""
 
     match argv[1]:
-        case "-v" | "--version" | "version":
+        case "-v" | "v" | "--ver" | "ver" | "--version" | "version":
             if PKG.version != Version.placeholder():
                 print(PKG.version)
                 exit(ExitCode.SUCCESS)
