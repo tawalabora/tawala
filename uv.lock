@@ -44,15 +44,15 @@ wheels = [
 
 [[package]]
 name = "christianwhocodes"
-version = "1.2.1"
+version = "1.2.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pyperclip" },
     { name = "rich" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b6/39/2c757e0efcc543080a84ad0708a55ad65614bd19e9986a683895f08edefb/christianwhocodes-1.2.1.tar.gz", hash = "sha256:1d81f2bdfc13c38b713f04850ea2fd981abc79ba849cb08f568039fb6fdd70c2", size = 7412, upload-time = "2025-12-12T18:49:03.509Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3f/3e/33251479c8c00a8c9e46ba4f68fff4530214a7a99076735ff3f3ef7fa3ca/christianwhocodes-1.2.2.tar.gz", hash = "sha256:30d0ef9797ec1f2d878f5966da6655df3541ffe464532fe29c7e945390e8228a", size = 7597, upload-time = "2025-12-12T20:19:19.507Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/db/d1/fed084195a84e0aa89bdf2f4249f52287003473744e5f1cef4a461600861/christianwhocodes-1.2.1-py3-none-any.whl", hash = "sha256:8b27254f2ffd9cf09ae7b571d5b4bbbd77d63a39fe23ad59129cf386da9e666e", size = 9842, upload-time = "2025-12-12T18:49:01.66Z" },
+    { url = "https://files.pythonhosted.org/packages/6e/b2/9b210ba756909c8631d962f10f4c2a2f0aa5b56b4404487c6c1ffddd1348/christianwhocodes-1.2.2-py3-none-any.whl", hash = "sha256:632c37b4600c7689cd88851166f39cdb288e54e06d989a705ae9d591bb17d146", size = 10062, upload-time = "2025-12-12T20:19:18.434Z" },
 ]
 
 [[package]]
@@ -677,7 +677,7 @@ wheels = [
 
 [[package]]
 name = "tawala"
-version = "1.1.1"
+version = "1.1.1.post1"
 source = { editable = "." }
 dependencies = [
     { name = "christianwhocodes" },
@@ -696,7 +696,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "christianwhocodes", specifier = ">=1.2.1" },
+    { name = "christianwhocodes", specifier = ">=1.2.2" },
     { name = "django", specifier = ">=6.0" },
     { name = "django-browser-reload", specifier = ">=1.21.0" },
     { name = "django-watchfiles", specifier = ">=1.4.0" },

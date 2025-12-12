@@ -1,15 +1,24 @@
+from enum import StrEnum
 from pathlib import Path
 from typing import Type
 
 from christianwhocodes.generators.file import (
     FileGenerator,
+    FileGeneratorOption,
     PgPassFileGenerator,
     PgServiceFileGenerator,
     SSHConfigFileGenerator,
 )
-from django.core.management.base import BaseCommand, CommandError, CommandParser
+from django.core.management.base import BaseCommand, CommandParser
 
 from .... import BASE_DIR_SETTING
+
+
+class FileOption(StrEnum):
+    PG_SERVICE = FileGeneratorOption.PG_SERVICE.value
+    PGPASS = FileGeneratorOption.PGPASS.value
+    SSH_CONFIG = FileGeneratorOption.SSH_CONFIG.value
+    VERCEL = "vercel"
 
 
 class VercelJSONFileGenerator(FileGenerator):
@@ -50,10 +59,10 @@ class Command(BaseCommand):
         parser.add_argument(
             "-f",
             "--file",
-            choices=["vercel", "pg_service", "pgpass", "ssh_config"],
-            type=str,
+            choices=[opt.value for opt in FileOption],
+            type=FileOption,
             required=True,
-            help="Specify which file to generate (options: vercel, pg_service, pgpass, ssh_config).",
+            help=f"Specify which file to generate (options: {', '.join(o.value for o in FileOption)}).",
         )
         parser.add_argument(
             "--force",
@@ -62,21 +71,15 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options) -> None:
-        file_option: str = options["file"].lower()
+        file_option: FileOption = FileOption(options["file"])
         force: bool = options["force"]
 
-        generators: dict[str, Type[FileGenerator]] = {
-            "vercel": VercelJSONFileGenerator,
-            "pg_service": PgServiceFileGenerator,
-            "pgpass": PgPassFileGenerator,
-            "ssh_config": SSHConfigFileGenerator,
+        generators: dict[FileOption, Type[FileGenerator]] = {
+            FileOption.VERCEL: VercelJSONFileGenerator,
+            FileOption.PG_SERVICE: PgServiceFileGenerator,
+            FileOption.PGPASS: PgPassFileGenerator,
+            FileOption.SSH_CONFIG: SSHConfigFileGenerator,
         }
-
-        if file_option not in generators:
-            raise CommandError(
-                f"Unknown file type '{file_option}'. "
-                f"Valid options are: {', '.join(generators.keys())}"
-            )
 
         generator_class: Type[FileGenerator] = generators[file_option]
         generator: FileGenerator = generator_class()
