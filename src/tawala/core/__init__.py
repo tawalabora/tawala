@@ -4,7 +4,7 @@ Initialization configuration.
 Exposes `PKG` and `PROJECT` for early initialization of:
 - core/api/cli.py
 - core/api/{a|w}sgi.py
-- core/app/presettings.py
+- core/app/settings/config.py
 - components/u{i|tils}/apps.py
 
 Import these symbols before Django loads apps and settings; avoid using them elsewhere.

@@ -1,6 +1,6 @@
 from enum import StrEnum
 from pathlib import Path
-from typing import Type
+from typing import Any, Type
 
 from christianwhocodes.generators.file import (
     FileGenerator,
@@ -70,7 +70,7 @@ class Command(BaseCommand):
             help="Force overwrite without confirmation.",
         )
 
-    def handle(self, *args, **options) -> None:
+    def handle(self, *args: Any, **options: Any) -> None:
         file_option: FileOption = FileOption(options["file"])
         force: bool = options["force"]
 

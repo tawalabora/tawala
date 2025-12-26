@@ -13,6 +13,6 @@ from django.core.wsgi import get_wsgi_application
 
 from .. import PKG
 
-environ.setdefault("DJANGO_SETTINGS_MODULE", f"{PKG.name}.core.app.settings")
+environ.setdefault("DJANGO_SETTINGS_MODULE", f"{PKG.name}.core.app.settings.main")
 
 application = get_wsgi_application()

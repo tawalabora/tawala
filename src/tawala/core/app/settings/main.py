@@ -98,6 +98,13 @@ MIDDLEWARE: list[str] = [
 
 ROOT_URLCONF = f"{PKG_NAME}.core.app.urls"
 
+WSGI_APPLICATION = f"{PKG_NAME}.core.api.wsgi.application"
+
+
+# ==============================================================================
+# Templates
+# ==============================================================================
+
 TEMPLATES: list[dict[str, Any]] = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -105,30 +112,19 @@ TEMPLATES: list[dict[str, Any]] = [
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
+                "django.template.context_processors.csp",
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "django.template.context_processors.csp",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = f"{PKG_NAME}.core.api.wsgi.application"
-
-
-# ==============================================================================
-# Commands
-# ==============================================================================
-
-COMMANDS_INSTALL: list[str] = SETTINGS.commands.install
-
-COMMANDS_BUILD: list[str] = SETTINGS.commands.build
-
 
 # ==============================================================================
 # Database Configuration
-# https://docs.djangoproject.com/en/dev/ref/databases/#postgresql-notes
+# https://docs.djangoproject.com/en/stable/ref/databases/#postgresql-notes
 # https://www.postgresql.org/docs/current/libpq-pgservice.html
 # https://www.postgresql.org/docs/current/libpq-pgpass.html
 # ==============================================================================
@@ -186,30 +182,8 @@ DATABASES = _get_database_config()
 
 
 # ==============================================================================
-# Tailwind CSS
-# ==============================================================================
-
-TAILWIND_CLI: dict[str, Any] = {
-    "PATH": SETTINGS.tailwind_cli.path
-    if SETTINGS.tailwind_cli.path
-    else TMP_DIR / "tailwindcss" / "cli",
-    "VERSION": SETTINGS.tailwind_cli.version,
-    "CSS": {
-        "input": APP_DIR / "static" / "app" / "css" / "input.css",
-        "output": PKG_DIR
-        / "components"
-        / "ui"
-        / "static"
-        / "ui"
-        / "css"
-        / "output.css",
-    },
-}
-
-
-# ==============================================================================
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/dev/howto/static-files/
+# https://docs.djangoproject.com/en/stable/howto/static-files/
 # ==============================================================================
 
 STATIC_URL = "/static/"
@@ -218,8 +192,8 @@ STATIC_ROOT: Path = PUBLIC_DIR / "static"
 
 # ==============================================================================
 # Storage & Media files (User-uploaded content)
-# https://docs.djangoproject.com/en/dev/ref/settings/#storages
-# https://docs.djangoproject.com/en/dev/ref/settings/#media-files
+# https://docs.djangoproject.com/en/stable/ref/settings/#storages
+# https://docs.djangoproject.com/en/stable/ref/settings/#media-files
 # ==============================================================================
 
 
@@ -257,8 +231,38 @@ STORAGE_TOKEN = (SETTINGS.storage.token,)
 
 
 # ==============================================================================
+# Commands
+# ==============================================================================
+
+COMMANDS_INSTALL: list[str] = SETTINGS.commands.install
+COMMANDS_BUILD: list[str] = SETTINGS.commands.build
+
+
+# ==============================================================================
+# Tailwind CSS
+# ==============================================================================
+
+TAILWIND_CLI: dict[str, Any] = {
+    "PATH": SETTINGS.tailwind_cli.path
+    if SETTINGS.tailwind_cli.path
+    else TMP_DIR / "tailwindcss" / "cli",
+    "VERSION": SETTINGS.tailwind_cli.version,
+    "CSS": {
+        "input": APP_DIR / "static" / "app" / "css" / "tailwind.css",
+        "output": PKG_DIR
+        / "components"
+        / "ui"
+        / "static"
+        / "ui"
+        / "css"
+        / "tailwind.css",
+    },
+}
+
+
+# ==============================================================================
 # Internationalization
-# https://docs.djangoproject.com/en/dev/topics/i18n/
+# https://docs.djangoproject.com/en/stable/topics/i18n/
 # ==============================================================================
 
 LANGUAGE_CODE = "en-us"
@@ -269,7 +273,7 @@ USE_TZ = True
 
 # ==============================================================================
 # Authentication & Password validation
-# https://docs.djangoproject.com/en/dev/ref/settings/#auth-password-validators
+# https://docs.djangoproject.com/en/stable/ref/settings/#auth-password-validators
 # ==============================================================================
 
 AUTH_PASSWORD_VALIDATORS: list[dict[Literal["NAME"], str]] = [
@@ -285,12 +289,11 @@ AUTH_PASSWORD_VALIDATORS: list[dict[Literal["NAME"], str]] = [
 
 # ==============================================================================
 # Content Security Policy (CSP)
-# https://docs.djangoproject.com/en/dev/howto/csp/
+# https://docs.djangoproject.com/en/stable/howto/csp/
 # ==============================================================================
 
 SECURE_CSP: dict[str, list[str]] = {
     "default-src": [CSP.SELF],
     "script-src": [CSP.SELF, CSP.NONCE],
-    # Example of the less secure 'unsafe-inline' option.
-    # "style-src": [CSP.SELF, CSP.UNSAFE_INLINE],
+    "style-src": [CSP.SELF, CSP.NONCE],
 }

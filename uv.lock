@@ -677,7 +677,7 @@ wheels = [
 
 [[package]]
 name = "tawala"
-version = "1.1.1.post1"
+version = "1.1.2"
 source = { editable = "." }
 dependencies = [
     { name = "christianwhocodes" },
@@ -707,7 +707,7 @@ dev = [
     { name = "djlint", specifier = ">=1.36.4" },
     { name = "pillow", specifier = ">=12.0.0" },
     { name = "psycopg", extras = ["binary", "pool"], specifier = ">=3.3.2" },
-    { name = "vercel", specifier = ">=0.3.5" },
+    { name = "vercel", specifier = ">=0.3.6" },
 ]
 
 [[package]]
@@ -754,7 +754,7 @@ wheels = [
 
 [[package]]
 name = "vercel"
-version = "0.3.5"
+version = "0.3.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
@@ -763,9 +763,9 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "vercel-sandbox" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ad/46/da95270b6b6d30f631fe98b2994f10e75b300ccd863e60c6f5179b35eaeb/vercel-0.3.5.tar.gz", hash = "sha256:15946e91e202cceaba3bc2e7960265e328a2e7307c1c4932cbfabb5232b09164", size = 35840, upload-time = "2025-10-28T21:22:25.749Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/bb/7f/ed317ae397ffe6b53f3218f0a26631a7b2db848b62a247ee6e2b22311cc6/vercel-0.3.6.tar.gz", hash = "sha256:222d2251b573f2c3c3857ceb3b0c49ea2659d49a6a0ac4e4f5b42e5ff4799e3d", size = 42078, upload-time = "2025-12-17T02:48:23.437Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a1/f4/d5fd7d8f258772b86ff8c348a957bb51cfb746dd73da3d0be7126e1e4153/vercel-0.3.5-py3-none-any.whl", hash = "sha256:29770bd5d8a68af996be7d73b73fa58180e070edae71d27af4262cb720f336d1", size = 45127, upload-time = "2025-10-28T21:22:24.28Z" },
+    { url = "https://files.pythonhosted.org/packages/a5/07/9c48e32cb934e7309089a85120d29dff0632454056ad1da5316e20591db0/vercel-0.3.6-py3-none-any.whl", hash = "sha256:47b2b0f6217f0a8deb12ce4b2838fb017536a756cfc5621c3987f07ef7a3f50b", size = 53177, upload-time = "2025-12-17T02:48:22.017Z" },
 ]
 
 [[package]]

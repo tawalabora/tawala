@@ -4,7 +4,7 @@ from typing import Any, Dict, Optional, cast
 
 from christianwhocodes.helpers import TypeConverter
 
-from .. import PKG, PROJECT
+from ... import PKG, PROJECT
 
 
 class PackageConfig:

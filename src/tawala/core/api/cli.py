@@ -26,7 +26,7 @@ def main() -> Optional[NoReturn]:
         case _:
             path.insert(0, str(PROJECT.base_dir))
             environ.setdefault(
-                "DJANGO_SETTINGS_MODULE", f"{PKG.name}.core.app.settings"
+                "DJANGO_SETTINGS_MODULE", f"{PKG.name}.core.app.settings.main"
             )
 
             utility = ManagementUtility(argv)

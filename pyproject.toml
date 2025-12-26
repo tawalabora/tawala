@@ -1,10 +1,10 @@
 [build-system]
-requires = ["uv_build>=0.9.17,<0.10.0"]
+requires = ["uv_build>=0.9.18,<0.10.0"]
 build-backend = "uv_build"
 
 [project]
 name = "tawala"
-version = "1.1.1.post1"
+version = "1.1.2"
 description = ""
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -31,7 +31,7 @@ dev = [
     "djlint>=1.36.4",
     "pillow>=12.0.0",
     "psycopg[binary,pool]>=3.3.2",
-    "vercel>=0.3.5",
+    "vercel>=0.3.6",
 ]
 
 [tool.djlint]
