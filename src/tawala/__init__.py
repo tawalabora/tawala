@@ -31,17 +31,15 @@ PKG = _Package()
 class _Project:
     """Directory path configuration and validation of project structure."""
 
-    _base_dir: Optional[Path] = None
+    _dir: Optional[Path] = None
     _toml_section: Optional[dict[str, Any]] = None
     _valid_project: Optional[bool] = None
 
     @classmethod
     def _load_project(cls) -> Optional[NoReturn]:
         try:
-            base_dir: Path = Path.cwd()
-            toml_section: dict[str, Any] = PyProject(base_dir / "pyproject.toml").data["tool"][
-                PKG.name
-            ]
+            dir: Path = Path.cwd()
+            toml_section: dict[str, Any] = PyProject(dir / "pyproject.toml").data["tool"][PKG.name]
 
         except (FileNotFoundError, KeyError):
             cls._valid_project = False
@@ -59,7 +57,7 @@ class _Project:
 
         else:
             cls._valid_project = True
-            cls._base_dir = base_dir
+            cls._dir = dir
             cls._toml_section = toml_section
 
         finally:
@@ -69,12 +67,12 @@ class _Project:
                 exit(ExitCode.ERROR)
 
     @property
-    def base_dir(self) -> Path:
+    def dir(self) -> Path:
         if not self._valid_project:
             self._load_project()
 
-        assert self._base_dir is not None
-        return self._base_dir
+        assert self._dir is not None
+        return self._dir
 
     @property
     def toml_section(self) -> dict[str, Any]:

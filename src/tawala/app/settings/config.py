@@ -8,10 +8,14 @@ from ... import PKG, PROJECT
 
 
 class PackageConfig:
-    def __init__(self) -> None:
-        self.dir = PKG.dir
-        self.name = PKG.name
-        self.version = PKG.version
+    pkg_dir = PKG.dir
+    name = PKG.name
+    version = PKG.version
+
+
+class ProjectConfig:
+    project_dir: Path = PROJECT.dir
+    toml_section: dict[str, Any] = PROJECT.toml_section
 
 
 class ConfField:
@@ -102,18 +106,14 @@ class ConfField:
         )
 
 
-class ProjectConfig:
+class BaseConfig(ProjectConfig):
     """Base configuration class that handles loading from environment variables and TOML files."""
 
-    _toml_data: dict[str, Any] = {}
     _config_specs: dict[str, dict[str, Any]] = {}
-    _base_dir = PROJECT.base_dir
 
-    def __init__(self) -> None:
-        self.base_dir: Path = self._base_dir
-
-    @staticmethod
+    @classmethod
     def _get_from_toml(
+        cls,
         key: Optional[str],
         default: Any = None,
     ) -> Any:
@@ -131,7 +131,7 @@ class ProjectConfig:
         if key is None:
             return default
 
-        current: Any = PROJECT.toml_section
+        current: Any = cls.toml_section
         for k in key.split("."):
             if isinstance(current, dict) and k in current:
                 current = cast(Any, current[k])
@@ -193,7 +193,7 @@ class ProjectConfig:
 
             # Create property getter
             def make_getter(name: str, cfg: dict[str, Any], field: ConfField):
-                def getter(self: "ProjectConfig") -> Any:
+                def getter(self: "BaseConfig") -> Any:
                     env_key = cfg["env"]
                     toml_key = cfg["toml"]
                     default = cfg["default"]
@@ -245,7 +245,7 @@ class ProjectConfig:
         return vars_info
 
 
-class SecurityConfig(ProjectConfig):
+class SecurityConfig(BaseConfig):
     """Security-related configuration settings."""
 
     secret_key = ConfField(env="SECRET_KEY", toml="secret-key")
@@ -253,8 +253,11 @@ class SecurityConfig(ProjectConfig):
     allowed_hosts = ConfField(env="ALLOWED_HOSTS", toml="allowed-hosts")
 
 
-class DatabaseConfig(ProjectConfig):
+class DatabaseConfig(BaseConfig):
     """Database configuration settings."""
+
+    def __init__(self) -> None:
+        self.sqlite3: Path = self.project_dir / "db.sqlite3"
 
     backend = ConfField(env="DB_BACKEND", toml="db.backend", default="sqlite3")
     service = ConfField(env="DB_SERVICE", toml="db.service")
@@ -268,8 +271,12 @@ class DatabaseConfig(ProjectConfig):
     port = ConfField(env="DB_PORT")
 
 
-class StorageConfig(ProjectConfig):
+class StorageConfig(BaseConfig):
     """Storage configuration settings."""
+
+    def __init__(self) -> None:
+        self.static_root: Path = self.project_dir / "public" / "static"
+        self.media_root: Path = self.project_dir / "public" / "media"
 
     backend = ConfField(
         env="STORAGE_BACKEND",
@@ -279,17 +286,27 @@ class StorageConfig(ProjectConfig):
     token = ConfField(env="BLOB_READ_WRITE_TOKEN", toml="storage.token")
 
 
-class CommandsConfig(ProjectConfig):
+class CommandsConfig(BaseConfig):
     """Install/Build Commands to be executed settings."""
 
     install = ConfField(env="COMMANDS_INSTALL", toml="commands.install")
     build = ConfField(env="COMMANDS_BUILD", toml="commands.build")
 
 
-class TailwindCSSConfig(ProjectConfig):
+class TailwindCSSConfig(BaseConfig, PackageConfig):
     """TailwindCSS configuration settings."""
 
-    version = ConfField(env="TAILWINDCSS_VERSION", toml="tailwindcss.version", default="v4.1.18")
-    cli = ConfField(env="TAILWINDCSS_CLI", toml="tailwindcss.cli")
-    source = ConfField(env="TAILWINDCSS_SOURCE", toml="tailwindcss.source")
-    output = ConfField(env="TAILWINDCSS_OUTPUT", toml="tailwindcss.output")
+    _version: str = "v4.1.18"
+
+    def __init__(self) -> None:
+        self.source: Path = self.project_dir / "tailwind.css"
+        self.output: Path = (
+            self.pkg_dir / "ui" / "static" / "ui" / "vendors" / "tailwindcss" / "tailwind.css"
+        )
+
+    version = ConfField(env="TAILWINDCSS_VERSION", toml="tailwindcss.version", default=_version)
+    cli = ConfField(
+        env="TAILWINDCSS_CLI",
+        toml="tailwindcss.cli",
+        default=Path(f"~/.local/bin/tailwindcss-{_version}.exe").expanduser(),
+    )

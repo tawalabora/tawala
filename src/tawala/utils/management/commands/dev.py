@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib.staticfiles.management.commands.runserver import (
     Command as RunserverCommand,
 )
+from django.core.management import call_command
 from django.core.management.base import CommandParser
 from django.utils import timezone
 
@@ -52,6 +53,12 @@ class Command(RunserverCommand):
         """
         self.no_clipboard = options.get("no_clipboard", False)
         return super().handle(*args, **options)
+
+    def inner_run(self, *args: Any, **options: Any) -> None:
+        """Run before the development server starts."""
+        if settings.DEBUG:
+            self._build_tailwind_initial()
+        return super().inner_run(*args, **options)  # type: ignore
 
     def check_migrations(self) -> None:
         f"""Check for unapplied migrations and display a warning.
@@ -109,6 +116,14 @@ class Command(RunserverCommand):
             self._copy_to_clipboard(server_port)
 
         self.stdout.write("")  # spacing
+
+    def _build_tailwind_initial(self) -> None:
+        """Build Tailwind CSS once before starting the server."""
+        try:
+            call_command("tailwindcss", "--clean", stdout=self.stdout, stderr=self.stderr)
+            call_command("tailwindcss", "--build", stdout=self.stdout, stderr=self.stderr)
+        except Exception:
+            pass  # Error will be raised by the tailwindcss management command
 
     def _print_startup_message(self) -> None:
         """Print initial startup message."""

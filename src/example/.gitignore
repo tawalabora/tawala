@@ -12,6 +12,3 @@ __pycache__/
 
 # SQLite database file
 /db.sqlite3
-
-# TailwindCSS CLI
-/tailwindcss.exe

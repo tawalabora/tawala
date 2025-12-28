@@ -25,7 +25,7 @@ def main() -> Optional[NoReturn]:
                 exit(ExitCode.ERROR)
 
         case _:
-            path.insert(0, str(PROJECT.base_dir))
+            path.insert(0, str(PROJECT.dir))
             environ.setdefault("DJANGO_SETTINGS_MODULE", DJANGO_SETTINGS_MODULE)
 
             utility = ManagementUtility(argv)

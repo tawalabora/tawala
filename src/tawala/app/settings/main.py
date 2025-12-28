@@ -30,22 +30,12 @@ class Settings:
 SETTINGS = Settings()
 
 # ==============================================================================
-# Package
+# Initialization
 # ==============================================================================
 
 PKG_NAME = SETTINGS.package.name
 PKG_VERSION = SETTINGS.package.version
-PKG_DIR = SETTINGS.package.dir
-
-
-# ==============================================================================
-# Project
-# ==============================================================================
-
-BASE_DIR = SETTINGS.project.base_dir
-APP_DIR = BASE_DIR / "app"
-API_DIR = BASE_DIR / "api"
-PUBLIC_DIR = BASE_DIR / "public"
+BASE_DIR = SETTINGS.project.project_dir
 
 
 # ==============================================================================
@@ -138,7 +128,7 @@ def _get_database_config() -> dict[str, dict[str, Any]]:
             return {
                 "default": {
                     "ENGINE": "django.db.backends.sqlite3",
-                    "NAME": BASE_DIR / "db.sqlite3",
+                    "NAME": SETTINGS.database.sqlite3,
                 }
             }
         case "postgresql" | "postgres" | "psql" | "pgsql" | "pg" | "psycopg":
@@ -180,7 +170,7 @@ DATABASES = _get_database_config()
 # ==============================================================================
 
 STATIC_URL = "/static/"
-STATIC_ROOT: Path = PUBLIC_DIR / "static"
+STATIC_ROOT = SETTINGS.storage.static_root
 
 
 # ==============================================================================
@@ -205,7 +195,7 @@ def _get_storage_config() -> dict[str, Any]:
             storage_backend = "django.core.files.storage.FileSystemStorage"
             global MEDIA_URL, MEDIA_ROOT
             MEDIA_URL = "/media/"
-            MEDIA_ROOT = PUBLIC_DIR / "media"
+            MEDIA_ROOT = SETTINGS.storage.media_root
 
         case "vercel" | "vercelblob" | "vercel_blob" | "vercel-blob":
             storage_backend = f"{PKG_NAME}.components.utils.backends.storage.VercelBlobStorage"
@@ -235,11 +225,11 @@ COMMANDS = {
 # TailwindCSS
 # ==============================================================================
 
-TAILWINDCSS: dict[str, Any] = {
+TAILWINDCSS: dict[str, str | Path] = {
     "VERSION": SETTINGS.tailwindcss.version,
-    "CLI": Path(SETTINGS.tailwindcss.cli or BASE_DIR / "tailwindcss.exe"),
-    "SOURCE": Path(SETTINGS.tailwindcss.source or APP_DIR / "static" / "source.css"),
-    "OUTPUT": Path(SETTINGS.tailwindcss.output or APP_DIR / "static" / "output.css"),
+    "CLI": Path(SETTINGS.tailwindcss.cli),
+    "SOURCE": SETTINGS.tailwindcss.source,
+    "OUTPUT": SETTINGS.tailwindcss.output,
 }
 
 
