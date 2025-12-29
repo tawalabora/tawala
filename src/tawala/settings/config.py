@@ -4,13 +4,13 @@ from typing import Any, Dict, Optional, cast
 
 from christianwhocodes.helpers import TypeConverter
 
-from ... import PKG, PROJECT
+from .. import PKG, PROJECT
 
 
 class PackageConfig:
     pkg_dir = PKG.dir
-    name = PKG.name
-    version = PKG.version
+    pkg_name = PKG.name
+    pkg_version = PKG.version
 
 
 class ProjectConfig:
@@ -299,10 +299,8 @@ class TailwindCSSConfig(BaseConfig, PackageConfig):
     _version: str = "v4.1.18"
 
     def __init__(self) -> None:
-        self.source: Path = self.project_dir / "app" / "static" / "app" / "global.css"
-        self.output: Path = (
-            self.pkg_dir / "ui" / "static" / "ui" / "global.css"
-        )
+        self.source: Path = self.project_dir / "app" / "static" / "app" / "source.css"
+        self.output: Path = self.pkg_dir / "static" / "tawala.css"
 
     version = ConfField(env="TAILWINDCSS_VERSION", toml="tailwindcss.version", default=_version)
     cli = ConfField(

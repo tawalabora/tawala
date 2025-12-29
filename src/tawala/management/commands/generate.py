@@ -41,8 +41,8 @@ class VercelJSONFileGenerator(FileGenerator):
         return (
             "{\n"
             '  "$schema": "https://openapi.vercel.sh/vercel.json",\n'
-            '  "installCommand": "uv run tawala run -i",\n'
-            '  "buildCommand": "uv run tawala run -b",\n'
+            f'  "installCommand": "uv run {settings.PKG_NAME} runinstall",\n'
+            f'  "buildCommand": "uv run {settings.PKG_NAME} runbuild",\n'
             '  "rewrites": [\n'
             "    {\n"
             '      "source": "/(.*)",\n'
@@ -69,7 +69,7 @@ class ASGIFileGenerator(FileGenerator):
     @property
     def data(self) -> str:
         """Return template content for asgi.py."""
-        return "from tawala.api import asgi\n\napp = asgi.application\n"
+        return f"from {settings.PKG_NAME} import asgi\n\napp = asgi.application\n"
 
 
 class WSGIFileGenerator(FileGenerator):
@@ -88,7 +88,7 @@ class WSGIFileGenerator(FileGenerator):
     @property
     def data(self) -> str:
         """Return template content for wsgi.py file."""
-        return "from tawala.api import wsgi\n\napp = wsgi.application\n"
+        return f"from {settings.PKG_NAME} import wsgi\n\napp = wsgi.application\n"
 
 
 class Command(BaseCommand):

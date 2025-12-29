@@ -1,10 +1,10 @@
 """
 Initialization configuration.
 
-Exposes `PKG` and `PROJECT` for early initialization of:
-- api/{!__init__}*.py
-- app/settings/config.py
-- u{i|tils}/apps.py
+Exposes `PKG`, `PROJECT`, `DJANGO_SETTINGS_MODULE` for early initialization of:
+- cli.py
+- settings/config.py
+- apps.py
 
 Import these symbols before Django loads apps and settings; avoid using them elsewhere.
 """
@@ -85,4 +85,6 @@ class _Project:
 
 PROJECT = _Project()
 
-__all__ = ["PKG", "PROJECT"]
+DJANGO_SETTINGS_MODULE = f"{PKG.name}.settings.main"
+
+__all__ = ["PKG", "PROJECT", "DJANGO_SETTINGS_MODULE"]

@@ -11,6 +11,9 @@ __pycache__/
 # Distribution folder
 /dist/
 
+# Public static files
+/src/example/public/static/
+
 # All files in migrations except __init__.py
 /src/example/app/migrations/*
 !/src/example/app/migrations/__init__.py

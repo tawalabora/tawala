@@ -1,19 +1,18 @@
-"""Management command: run
+"""Management command utilities: run
 
-Executes install or build commands.
+Shared classes and utilities for executing install or build commands.
 Supports dry-run mode for previewing commands before execution
 and continues running remaining commands even if one fails.
 """
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any
 
 from django.conf import settings
 from django.core.management import call_command
-from django.core.management.base import BaseCommand, CommandError, CommandParser
+from django.core.management.base import BaseCommand, CommandError
 
-from ..art import ArtPrinter, ArtType
+from .art import ArtPrinter, ArtType
 
 
 @dataclass
@@ -447,120 +446,3 @@ class Output(CommandOutput):
             f"{self.command.style.HTTP_INFO(f'{current}/{total}')} "
             f"({self.command.style.NOTICE(f'{percentage:.0f}%')})"
         )
-
-
-class BuildCommandGenerator(CommandGenerator):
-    """Generator for build command execution."""
-
-    def get_commands_from_settings(self) -> list[str]:
-        """Retrieve build commands."""
-        return settings.COMMANDS["BUILD"]
-
-    def create_output_handler(self) -> CommandOutput:
-        """Create the output handler for build commands."""
-        return Output(self.django_command, ArtType.BUILD)
-
-    def get_mode(self) -> str:
-        """Get the mode identifier for build commands."""
-        return "BUILD"
-
-
-class InstallCommandGenerator(CommandGenerator):
-    """Generator for install command execution."""
-
-    def get_commands_from_settings(self) -> list[str]:
-        """Retrieve install commands."""
-        return settings.COMMANDS["INSTALL"]
-
-    def create_output_handler(self) -> CommandOutput:
-        """Create the output handler for install commands."""
-        return Output(self.django_command, ArtType.INSTALL)
-
-    def get_mode(self) -> str:
-        """Get the mode identifier for install commands."""
-        return "INSTALL"
-
-
-class Command(BaseCommand):
-    help = "Execute install or build commands"
-
-    def add_arguments(self, parser: CommandParser) -> None:
-        """Define command-line arguments.
-
-        Args:
-            parser: The argument parser to add arguments to.
-        """
-        # Create mutually exclusive group for command type
-        group = parser.add_mutually_exclusive_group(required=True)
-
-        # Positional arguments
-        group.add_argument(
-            "command_type",
-            nargs="?",
-            choices=["install", "build"],
-            help="Type of commands to execute (install or build)",
-        )
-
-        # Optional flag arguments
-        group.add_argument(
-            "-i",
-            "--install",
-            action="store_true",
-            help="Execute install commands",
-        )
-
-        group.add_argument(
-            "-b",
-            "--build",
-            action="store_true",
-            help="Execute build commands",
-        )
-
-        # Dry-run option
-        parser.add_argument(
-            "--dry-run",
-            action="store_true",
-            help="Show commands that would be executed without running them",
-        )
-
-    def handle(self, *args: Any, **options: Any) -> None:
-        """Handle the run command execution.
-
-        Retrieves install or build commands, validates them,
-        and either displays them (dry-run) or executes them sequentially.
-        Continues execution even if individual commands fail.
-
-        Args:
-            *args: Unused positional arguments.
-            **options: Command options including:
-                - command_type (str): Either 'install' or 'build'.
-                - install (bool): If True, execute install commands.
-                - build (bool): If True, execute build commands.
-                - dry_run (bool): If True, show commands without executing.
-        """
-        dry_run: bool = options.get("dry_run", False)
-        generator = self._get_generator(options)
-
-        if generator:
-            generator.generate(dry_run=dry_run)
-
-    def _get_generator(self, options: dict[str, Any]) -> CommandGenerator | None:
-        """Get the appropriate command generator based on options.
-
-        Args:
-            options: Command options dictionary.
-
-        Returns:
-            The appropriate CommandGenerator instance, or None if invalid options.
-        """
-        command_type = options.get("command_type")
-        is_install = options.get("install", False)
-        is_build = options.get("build", False)
-
-        if command_type == "install" or is_install:
-            return InstallCommandGenerator(self)
-        elif command_type == "build" or is_build:
-            return BuildCommandGenerator(self)
-        else:
-            self.stdout.write(self.style.ERROR("Please specify either 'install' or 'build'"))
-            return None

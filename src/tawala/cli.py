@@ -8,8 +8,7 @@ from christianwhocodes.helpers import ExitCode, Version
 from christianwhocodes.stdout import print
 from django.core.management import ManagementUtility
 
-from .. import PKG, PROJECT
-from . import DJANGO_SETTINGS_MODULE
+from . import DJANGO_SETTINGS_MODULE, PKG, PROJECT
 
 
 def main() -> Optional[NoReturn]:

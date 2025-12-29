@@ -33,8 +33,8 @@ SETTINGS = Settings()
 # Initialization
 # ==============================================================================
 
-PKG_NAME = SETTINGS.package.name
-PKG_VERSION = SETTINGS.package.version
+PKG_NAME = SETTINGS.package.pkg_name
+PKG_VERSION = SETTINGS.package.pkg_version
 BASE_DIR = SETTINGS.project.project_dir
 
 
@@ -65,11 +65,10 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    PKG_NAME,
     "django.contrib.staticfiles",
     "django_browser_reload",
     "django_watchfiles",
-    f"{PKG_NAME}.utils",
-    f"{PKG_NAME}.ui",
     "app",
 ]
 
@@ -85,9 +84,9 @@ MIDDLEWARE: list[str] = [
     "django_browser_reload.middleware.BrowserReloadMiddleware",
 ]
 
-ROOT_URLCONF = f"{PKG_NAME}.app.urls"
+ROOT_URLCONF = f"{PKG_NAME}.urls"
 
-WSGI_APPLICATION = f"{PKG_NAME}.api.wsgi.application"
+WSGI_APPLICATION = f"{PKG_NAME}.wsgi.application"
 
 
 # ==============================================================================
@@ -198,7 +197,7 @@ def _get_storage_config() -> dict[str, Any]:
             MEDIA_ROOT = SETTINGS.storage.media_root
 
         case "vercel" | "vercelblob" | "vercel_blob" | "vercel-blob":
-            storage_backend = f"{PKG_NAME}.components.utils.backends.storage.VercelBlobStorage"
+            storage_backend = f"{PKG_NAME}.backends.storage.VercelBlobStorage"
 
         case _:
             raise ValueError(f"Unsupported storage backend: {backend}")

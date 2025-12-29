@@ -5,11 +5,11 @@ from django.conf import settings
 from django.contrib.staticfiles.management.commands.runserver import (
     Command as RunserverCommand,
 )
-from django.core.management import call_command
 from django.core.management.base import CommandParser
 from django.utils import timezone
 
 from ..art import ArtPrinter
+from ..run import CommandExecutor
 
 
 class Command(RunserverCommand):
@@ -63,7 +63,7 @@ class Command(RunserverCommand):
 
         # Disable the Tailwind watcher if flag is set
         if self.no_tailwind_watch:
-            from ....ui.templatetags.tailwindcss import TailwindWatcher
+            from ...templatetags.tailwindcss import TailwindWatcher
 
             TailwindWatcher.disable()
 
@@ -133,16 +133,22 @@ class Command(RunserverCommand):
         self.stdout.write("")  # spacing
 
     def _build_tailwind_initial(self) -> None:
-        """Build Tailwind CSS once before starting the server."""
-        try:
-            call_command(
-                "tailwindcss", "--clean", "--no-verbose", stdout=self.stdout, stderr=self.stderr
-            )
-            call_command(
-                "tailwindcss", "--build", "--no-verbose", stdout=self.stdout, stderr=self.stderr
-            )
-        except Exception:
-            pass  # Error will be raised by the tailwindcss management command
+        """Build Tailwind CSS once before starting the server.
+
+        Uses CommandExecutor from run.py for consistent command execution
+        and error handling across the application.
+        """
+        executor = CommandExecutor(self)
+
+        # Execute tailwind clean command
+        clean_result = executor.execute("tailwindcss --clean --no-verbose")
+        if not clean_result.success:
+            self.stderr.write(self.style.WARNING(f"⚠️  Tailwind clean failed: {clean_result.error}"))
+
+        # Execute tailwind build command
+        build_result = executor.execute("tailwindcss --build --no-verbose")
+        if not build_result.success:
+            self.stderr.write(self.style.ERROR(f"❌ Tailwind build failed: {build_result.error}"))
 
     def _print_startup_message(self) -> None:
         """Print initial startup message."""

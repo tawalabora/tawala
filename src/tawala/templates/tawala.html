@@ -15,19 +15,19 @@
     {% block fonts %}
     {% endblock fonts %}
     {% tailwindcss %}
-    {% include "ui/vendors/bootstrap-icons.html" %}
-    {% include "ui/vendors/aos.html" %}
+    {% include "vendors/bootstrap-icons.html" %}
+    {% include "vendors/aos.html" %}
     {% block styles %}
     {% endblock styles %}
     {% block scripts %}
     {% endblock scripts %}
   </head>
   <body>
-    {% include "ui/widgets/preloader.html" %}
-    {% include "ui/widgets/scroll-top.html" %}
-    {% include "ui/sections/header.html" %}
+    {% include "widgets/preloader.html" %}
+    {% include "widgets/scroll-top.html" %}
+    {% include "sections/header.html" %}
     {% block main %}
     {% endblock main %}
-    {% include "ui/sections/footer.html" %}
+    {% include "sections/footer.html" %}
   </body>
 </html>
