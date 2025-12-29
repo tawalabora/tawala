@@ -120,8 +120,12 @@ class Command(RunserverCommand):
     def _build_tailwind_initial(self) -> None:
         """Build Tailwind CSS once before starting the server."""
         try:
-            call_command("tailwindcss", "--clean", stdout=self.stdout, stderr=self.stderr)
-            call_command("tailwindcss", "--build", stdout=self.stdout, stderr=self.stderr)
+            call_command(
+                "tailwindcss", "--clean", "--no-verbose", stdout=self.stdout, stderr=self.stderr
+            )
+            call_command(
+                "tailwindcss", "--build", "--no-verbose", stdout=self.stdout, stderr=self.stderr
+            )
         except Exception:
             pass  # Error will be raised by the tailwindcss management command
 

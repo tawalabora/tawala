@@ -10,7 +10,7 @@ This module provides a clean, OOP-based interface for:
 from pathlib import Path
 from platform import machine, system
 from stat import S_IXGRP, S_IXOTH, S_IXUSR
-from subprocess import CalledProcessError, run
+from subprocess import DEVNULL, CalledProcessError, run
 from typing import Any, Callable
 from urllib.error import HTTPError, URLError
 from urllib.request import urlretrieve
@@ -76,8 +76,9 @@ class TailwindCSSDownloader:
 
     BASE_URL = "https://github.com/tailwindlabs/tailwindcss/releases"
 
-    def __init__(self, stdout_writer: Callable[[str], None]):
+    def __init__(self, stdout_writer: Callable[[str], None], verbose: bool = True):
         self.write = stdout_writer
+        self.verbose = verbose
 
     def get_download_url(self, version: str, platform: PlatformInfo) -> str:
         """Generate the download URL for the TailwindCSS CLI binary."""
@@ -100,25 +101,28 @@ class TailwindCSSDownloader:
         temp_destination = destination.with_suffix(destination.suffix + ".tmp")
 
         try:
-            self.write(f"Downloading from: {url}")
+            if self.verbose:
+                self.write(f"Downloading from: {url}")
 
             def progress_callback(block_num: int, block_size: int, total_size: int) -> None:
-                if show_progress and total_size > 0:
+                if self.verbose and show_progress and total_size > 0:
                     downloaded = block_num * block_size
                     percent = min(100.0, (downloaded / total_size) * 100)
                     self.write(f"\rProgress: {percent:.1f}% ({downloaded}/{total_size} bytes)")
 
             urlretrieve(url, temp_destination, progress_callback)
 
-            if show_progress:
+            if self.verbose and show_progress:
                 self.write("")
 
             temp_destination.rename(destination)
-            self.write(f"✓ Downloaded to: {destination}")
+            if self.verbose:
+                self.write(f"✓ Downloaded to: {destination}")
 
         except KeyboardInterrupt:
             self._cleanup_temp_file(temp_destination)
-            self.write("\nDownload cancelled by user.")
+            if self.verbose:
+                self.write("\nDownload cancelled by user.")
             raise CommandError("Installation aborted.")
         except HTTPError as e:
             self._cleanup_temp_file(temp_destination)
@@ -152,16 +156,19 @@ class InstallHandler:
         config: dict[str, Any],
         stdout_writer: Callable[[str], None],
         style: Any,
+        verbose: bool = True,
     ):
         self.config = config
         self.write = stdout_writer
         self.style = style
-        self.downloader = TailwindCSSDownloader(stdout_writer)
+        self.verbose = verbose
+        self.downloader = TailwindCSSDownloader(stdout_writer, verbose)
 
     def install(self, auto_confirm: bool = False, use_cache: bool = False) -> None:
         """Install the TailwindCSS CLI binary."""
         platform = PlatformInfo()
-        self._display_platform_info(platform)
+        if self.verbose:
+            self._display_platform_info(platform)
 
         cli_path = self.config["CLI"]
         self._ensure_directory_exists(cli_path.parent)
@@ -169,7 +176,8 @@ class InstallHandler:
         version = self.config["VERSION"]
         download_url = self.downloader.get_download_url(version, platform)
 
-        self._display_download_info(version, platform, cli_path, download_url)
+        if self.verbose:
+            self._display_download_info(version, platform, cli_path, download_url)
 
         if self._should_use_cache(cli_path, use_cache):
             return
@@ -213,9 +221,12 @@ class InstallHandler:
     def _should_use_cache(self, cli_path: Path, use_cache: bool) -> bool:
         """Check if cached CLI should be used."""
         if cli_path.exists() and use_cache:
-            self.write(
-                self.style.HTTP_NOT_MODIFIED("\nUsing cached TailwindCSS CLI. Skipping download.\n")
-            )
+            if self.verbose:
+                self.write(
+                    self.style.HTTP_NOT_MODIFIED(
+                        "\nUsing cached TailwindCSS CLI. Skipping download.\n"
+                    )
+                )
             return True
         return False
 
@@ -228,14 +239,16 @@ class InstallHandler:
             cli_path.unlink()
             return True
 
-        self.write(self.style.WARNING(f"\n⚠ TailwindCSS CLI already exists at: {cli_path}"))
+        if self.verbose:
+            self.write(self.style.WARNING(f"\n⚠ TailwindCSS CLI already exists at: {cli_path}"))
         overwrite = input("Overwrite? (y/N): ").strip().lower()
 
         if overwrite == "y":
             cli_path.unlink()
             return True
 
-        self.write("Installation cancelled.")
+        if self.verbose:
+            self.write("Installation cancelled.")
         return False
 
     def _confirm_download(self, auto_confirm: bool) -> bool:
@@ -245,7 +258,8 @@ class InstallHandler:
 
         confirm = input("\nProceed with download? (y/N): ").strip().lower()
         if confirm != "y":
-            self.write("Installation cancelled.")
+            if self.verbose:
+                self.write("Installation cancelled.")
             return False
 
         return True
@@ -261,13 +275,14 @@ class InstallHandler:
         self.downloader.download(download_url, cli_path)
         self.downloader.make_executable(cli_path)
 
-        self.write(
-            self.style.SUCCESS(
-                f"\n✓ TailwindCSS CLI successfully installed at: {cli_path}\n"
-                f"  Platform: {platform}\n"
-                f"  Version: {version}"
+        if self.verbose:
+            self.write(
+                self.style.SUCCESS(
+                    f"\n✓ TailwindCSS CLI successfully installed at: {cli_path}\n"
+                    f"  Platform: {platform}\n"
+                    f"  Version: {version}"
+                )
             )
-        )
 
 
 class BuildHandler:
@@ -278,10 +293,12 @@ class BuildHandler:
         config: dict[str, Any],
         stdout_writer: Callable[[str], None],
         style: Any,
+        verbose: bool = True,
     ):
         self.config = config
         self.write = stdout_writer
         self.style = style
+        self.verbose = verbose
 
     def build(self) -> None:
         """Build the TailwindCSS output file."""
@@ -325,9 +342,13 @@ class BuildHandler:
     def _execute_build(self, command: list[str], cli_path: Path) -> None:
         """Execute the TailwindCSS build command."""
         try:
-            self.write("Building TailwindCSS output file...")
-            run(command, check=True)
-            self.write(self.style.SUCCESS("✓ TailwindCSS output file built successfully!"))
+            if self.verbose:
+                self.write("Building TailwindCSS output file...")
+                run(command, check=True)
+                self.write(self.style.SUCCESS("✓ TailwindCSS output file built successfully!"))
+            else:
+                # Suppress all output from TailwindCSS CLI
+                run(command, check=True, stdout=DEVNULL, stderr=DEVNULL)
         except FileNotFoundError:
             raise CommandError(
                 f"TailwindCSS CLI not found at '{cli_path}'. "
@@ -347,10 +368,12 @@ class CleanHandler:
         config: dict[str, Any],
         stdout_writer: Callable[[str], None],
         style: Any,
+        verbose: bool = True,
     ):
         self.config = config
         self.write = stdout_writer
         self.style = style
+        self.verbose = verbose
 
     def clean(self) -> None:
         """Delete the built TailwindCSS output file."""
@@ -434,13 +457,20 @@ class Command(BaseCommand):
             action="store_true",
             help="Skip download if CLI already exists.",
         )
+        parser.add_argument(
+            "--no-verbose",
+            dest="no_verbose",
+            action="store_true",
+            help="Suppress output messages.",
+        )
 
     def handle(self, *args: Any, **options: Any) -> None:
         """Main command handler."""
         config = settings.TAILWINDCSS
         command_type = self._determine_command(options)
         self._validate_options(command_type, options)
-        self._execute_command(command_type, config, options)
+        verbose = not options.get("no_verbose", False)
+        self._execute_command(command_type, config, options, verbose)
 
     def _determine_command(self, options: dict[str, Any]) -> str:
         """Determine which command to execute."""
@@ -476,17 +506,18 @@ class Command(BaseCommand):
         command_type: str,
         config: dict[str, Any],
         options: dict[str, Any],
+        verbose: bool,
     ) -> None:
         """Execute the specified command."""
         if command_type == "install":
-            handler = InstallHandler(config, self.stdout.write, self.style)
+            handler = InstallHandler(config, self.stdout.write, self.style, verbose)
             handler.install(
                 auto_confirm=options.get("auto_confirm", False),
                 use_cache=options.get("use_cache", False),
             )
         elif command_type == "build":
-            handler = BuildHandler(config, self.stdout.write, self.style)
+            handler = BuildHandler(config, self.stdout.write, self.style, verbose)
             handler.build()
         elif command_type == "clean":
-            handler = CleanHandler(config, self.stdout.write, self.style)
+            handler = CleanHandler(config, self.stdout.write, self.style, verbose)
             handler.clean()
