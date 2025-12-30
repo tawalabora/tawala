@@ -267,14 +267,3 @@ class Conf:
                 attr_name,
                 property(make_getter(attr_name, config_dict)),
             )
-
-
-class EmailConf(Conf):
-    """Email configuration settings."""
-
-    backend = ConfField(env="EMAIL_BACKEND", toml="email.backend", type=str)
-    host = ConfField(env="EMAIL_HOST", toml="email.host", type=str)
-    port = ConfField(env="EMAIL_PORT", toml="email.port", type=str)
-    use_tls = ConfField(env="EMAIL_USE_TLS", toml="email.use-tls", type=bool)
-    host_user = ConfField(env="EMAIL_HOST_USER", toml="email.host-user", type=str)
-    host_password = ConfField(env="EMAIL_HOST_PASSWORD", toml="email.host-password", type=str)

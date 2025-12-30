@@ -5,6 +5,7 @@ from django.utils.csp import CSP  # type: ignore[reportMissingTypeStubs]
 from .config.commands import *  # noqa: F403
 from .config.contact import *  # noqa: F403
 from .config.databases import *  # noqa: F403
+from .config.email import *  # noqa: F403
 from .config.pkg import *  # noqa: F403
 from .config.project import *  # noqa: F403
 from .config.security import *  # noqa: F403
@@ -12,7 +13,6 @@ from .config.site import *  # noqa: F403
 from .config.social_media import *  # noqa: F403
 from .config.storages import *  # noqa: F403
 from .config.tailwindcss import *  # noqa: F403
-
 
 # ==============================================================================
 # Application definition
