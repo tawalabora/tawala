@@ -1,11 +1,10 @@
 import builtins
 import pathlib
-from os import environ
 from typing import Any, Optional, cast
 
 from christianwhocodes.helpers import TypeConverter
 
-from .. import PKG, PROJECT
+from .. import ENV, PKG, PROJECT
 
 
 class PackageConf:
@@ -111,9 +110,6 @@ class ProjectConf:
 
     def __init__(self) -> None:
         self.base_dir: pathlib.Path = PROJECT.dir
-        self.app_dir = self.base_dir / "app"
-        self.api_dir = self.base_dir / "api"
-        self.public_dir = self.base_dir / "public"
 
     @classmethod
     def _get_from_toml(cls, key: Optional[str]) -> Any:
@@ -156,11 +152,12 @@ class ProjectConf:
             The configuration value from the first available source (raw, no casting)
         """
         # Try environment variable first (if env_key is provided and exists)
-        if env_key is not None and env_key in environ:
-            return environ[env_key]
+        if env_key is not None and env_key in ENV:
+            return ENV[env_key]
 
-        # Fall back to TOML config and set None as it is the final fallback
-        return cls._get_from_toml(toml_key)
+        # Else fall back to TOML config and set None as it is the final fallback
+        else:
+            return cls._get_from_toml(toml_key)
 
     def __init_subclass__(cls) -> None:
         """

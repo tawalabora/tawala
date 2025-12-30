@@ -84,7 +84,7 @@ def app_logo_url() -> str:
         The application logo URL
     """
     return _asset_resolver.get_asset_url(
-        relative_path="img/logo.png", fallback_path="defaults/logo.png"
+        relative_path="app/img/logo.png", fallback_path="defaults/logo.png"
     )
 
 
@@ -96,5 +96,18 @@ def app_favicon_url() -> str:
         The application favicon URL
     """
     return _asset_resolver.get_asset_url(
-        relative_path="img/favicon.ico", fallback_path="defaults/favicon.ico"
+        relative_path="app/img/favicon.ico", fallback_path="defaults/favicon.ico"
+    )
+
+
+@register.simple_tag
+def app_apple_touch_icon_url() -> str:
+    """Return the application Apple Touch Icon URL from settings.
+
+    Returns:
+        The application Apple Touch Icon URL
+    """
+    return _asset_resolver.get_asset_url(
+        relative_path="app/img/apple-touch-icon.png",
+        fallback_path="defaults/apple-touch-icon.png",
     )

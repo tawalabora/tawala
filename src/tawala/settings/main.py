@@ -36,9 +36,9 @@ PKG_VERSION: str = SETTINGS.package.pkg_version
 # ==============================================================================
 
 BASE_DIR: Path = SETTINGS.project.base_dir
-APP_DIR: Path = SETTINGS.project.app_dir
-API_DIR: Path = SETTINGS.project.api_dir
-PUBLIC_DIR: Path = SETTINGS.project.public_dir
+APP_DIR: Path = BASE_DIR / "app"
+API_DIR: Path = BASE_DIR / "api"
+PUBLIC_DIR: Path = BASE_DIR / "public"
 
 
 # ==============================================================================
@@ -46,9 +46,9 @@ PUBLIC_DIR: Path = SETTINGS.project.public_dir
 # See https://docs.djangoproject.com/en/stable/howto/deployment/checklist/
 # ==============================================================================
 
-SECRET_KEY: str = SETTINGS.security.secret_key or "django-insecure-change-me-in-production"
-DEBUG: bool = SETTINGS.security.debug if SETTINGS.security.debug is not None else True
-ALLOWED_HOSTS: list[str] = SETTINGS.security.allowed_hosts or ["localhost", "127.0.0.1"]
+SECRET_KEY: str = SETTINGS.security.secret_key
+DEBUG: bool = SETTINGS.security.debug
+ALLOWED_HOSTS: list[str] = SETTINGS.security.allowed_hosts
 
 # Production security settings
 if not DEBUG:

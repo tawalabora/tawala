@@ -3,16 +3,18 @@ Initialization configuration.
 
 Exposes `PKG`, `PROJECT`, `DJANGO_SETTINGS_MODULE` for early initialization of:
 - cli.py
-- settings/config.py
+- settings/conf.py
 
 Import these symbols before Django loads apps and settings; avoid using them elsewhere.
 """
 
+from os import environ
 from pathlib import Path
 from typing import Any, NoReturn, Optional
 
 from christianwhocodes.helpers import ExitCode, PyProject, Version
 from christianwhocodes.stdout import Text, print
+from dotenv import dotenv_values
 
 
 class _Package:
@@ -25,6 +27,8 @@ class _Package:
 
 
 PKG = _Package()
+
+DJANGO_SETTINGS_MODULE = f"{PKG.name}.settings.main"
 
 
 class _Project:
@@ -84,6 +88,10 @@ class _Project:
 
 PROJECT = _Project()
 
-DJANGO_SETTINGS_MODULE = f"{PKG.name}.settings.main"
+ENV: dict[str, Any] = {
+    **dotenv_values(PROJECT.dir / ".env"),
+    **environ,  # override loaded values with environment variables
+}
 
-__all__ = ["PKG", "PROJECT", "DJANGO_SETTINGS_MODULE"]
+
+__all__ = ["PKG", "DJANGO_SETTINGS_MODULE", "PROJECT", "ENV"]
