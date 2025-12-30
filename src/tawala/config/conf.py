@@ -178,6 +178,9 @@ class ConfField:
 class Conf:
     """Base configuration class that handles loading from environment variables and TOML files."""
 
+    # Track all Conf subclasses
+    _subclasses: list[type["Conf"]] = []
+
     @staticmethod
     def _get_from_toml(key: Optional[str]) -> Any:
         """
@@ -234,6 +237,13 @@ class Conf:
         """
         super().__init_subclass__()
 
+        # Register this subclass
+        Conf._subclasses.append(cls)
+
+        # Initialize _env_fields for this subclass
+        if not hasattr(cls, "_env_fields"):
+            cls._env_fields: list[dict[str, Any]] = []
+
         for attr_name, attr_value in list(vars(cls).items()):
             # Skip private attributes, methods, and special descriptors
             if (
@@ -248,6 +258,18 @@ class Conf:
                 continue
 
             config_dict = attr_value.dict
+
+            # Store field metadata if it has an env key
+            if config_dict["env"] is not None:
+                cls._env_fields.append(
+                    {
+                        "env": config_dict["env"],
+                        "toml": config_dict["toml"],
+                        "name": config_dict["name"],
+                        "type": config_dict["type"],
+                        "class": cls.__name__,
+                    }
+                )
 
             # Create property getter
             def make_getter(name: str, cfg: dict[str, Any]):
@@ -267,3 +289,20 @@ class Conf:
                 attr_name,
                 property(make_getter(attr_name, config_dict)),
             )
+
+    @classmethod
+    def get_all_env_fields(cls) -> list[dict[str, Any]]:
+        """
+        Collect all ConfField definitions that use environment variables
+        from all Conf subclasses.
+
+        Returns:
+            List of dicts containing env key, toml key, name, type, and class for each field
+        """
+        env_fields: list[dict[str, Any]] = []
+
+        for subclass in cls._subclasses:
+            if hasattr(subclass, "_env_fields"):
+                env_fields.extend(subclass._env_fields)
+
+        return env_fields
