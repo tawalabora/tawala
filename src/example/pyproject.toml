@@ -12,13 +12,4 @@ dependencies = [
 ]
 
 [tool.tawala]
-allowed-hosts = ["localhost", "127.0.0.1"]
-secret-key = "django-insecure-change-me-in-production-via-envvar"
-commands = { install = [
-    "tailwindcss install -y --use-cache",
-], build = [
-    "makemigrations",
-    "migrate",
-    "tailwindcss build",
-    "collectstatic --noinput",
-] }
+commands = { install = ["tailwindcss install -y --use-cache"] }
