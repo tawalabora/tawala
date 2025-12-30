@@ -376,3 +376,14 @@ class ContactNumberConf(ProjectConf):
         toml="contact.number.additional",
         type="list[str]",
     )
+
+
+class SocialMediaConf(ProjectConf):
+    """Social Media configuration settings."""
+
+    facebook = ConfField(env="SOCIAL_MEDIA_FACEBOOK", toml="social-media.facebook", type=str)
+    x = ConfField(env="SOCIAL_MEDIA_TWITTER", toml="social-media.x", type=str)
+    instagram = ConfField(env="SOCIAL_MEDIA_INSTAGRAM", toml="social-media.instagram", type=str)
+    linkedin = ConfField(env="SOCIAL_MEDIA_LINKEDIN", toml="social-media.linkedin", type=str)
+    whatsapp = ConfField(env="SOCIAL_MEDIA_WHATSAPP", toml="social-media.whatsapp", type=str)
+    youtube = ConfField(env="SOCIAL_MEDIA_YOUTUBE", toml="social-media.youtube", type=str)
