@@ -38,6 +38,9 @@ PKG_VERSION: str = SETTINGS.package.pkg_version
 # Project
 # ==============================================================================
 
+PROJECT_ENV: dict[str, str] = SETTINGS.project.env
+PROJECT_TOML: dict[str, Any] = SETTINGS.project.toml
+
 BASE_DIR: Path = SETTINGS.project.base_dir
 APP_DIR: Path = BASE_DIR / "app"
 API_DIR: Path = BASE_DIR / "api"

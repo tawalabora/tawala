@@ -6,7 +6,7 @@ from christianwhocodes.helpers import TypeConverter
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 
-from .. import ENV, PKG, PROJECT
+from .. import PKG, PROJECT
 
 
 class PackageConf:
@@ -185,9 +185,12 @@ class ConfField:
 class ProjectConf:
     """Base configuration class that handles loading from environment variables and TOML files."""
 
-    _toml_section: dict[str, Any] = PROJECT.toml_section
+    _env = PROJECT.env
+    _toml = PROJECT.toml
 
     def __init__(self) -> None:
+        self.env = self._env
+        self.toml = self._toml
         self.base_dir: pathlib.Path = PROJECT.dir
 
     @classmethod
@@ -205,7 +208,7 @@ class ProjectConf:
         if key is None:
             return None
         else:
-            current: Any = cls._toml_section
+            current: Any = cls._toml
             for k in key.split("."):
                 if isinstance(current, dict) and k in current:
                     current = cast(Any, current[k])
@@ -231,8 +234,9 @@ class ProjectConf:
             The configuration value from the first available source (raw, no casting)
         """
         # Try environment variable first (if env_key is provided and exists)
-        if env_key is not None and env_key in ENV:
-            return ENV[env_key]
+        env_config = cls._env
+        if env_key is not None and env_key in env_config:
+            return env_config[env_key]
 
         # Else fall back to TOML config and set None as it is the final fallback
         else:

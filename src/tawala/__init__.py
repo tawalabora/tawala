@@ -78,20 +78,23 @@ class _Project:
         return self._dir
 
     @property
-    def toml_section(self) -> dict[str, Any]:
+    def toml(self) -> dict[str, Any]:
         if not self._valid_project:
             self._load_project()
 
         assert self._toml_section is not None
         return self._toml_section
 
+    @property
+    def env(self) -> dict[str, Any]:
+        """Get combined .env and environment variables as a dictionary."""
+        return {
+            **dotenv_values(self.dir / ".env"),
+            **environ,  # override loaded values with environment variables
+        }
+
 
 PROJECT = _Project()
 
-ENV: dict[str, Any] = {
-    **dotenv_values(PROJECT.dir / ".env"),
-    **environ,  # override loaded values with environment variables
-}
 
-
-__all__ = ["PKG", "DJANGO_SETTINGS_MODULE", "PROJECT", "ENV"]
+__all__ = ["PKG", "DJANGO_SETTINGS_MODULE", "PROJECT"]
