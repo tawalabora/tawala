@@ -215,8 +215,8 @@ class InstallHandler:
         self.write("\nDownload Information:")
         self.write(f"  Version:     {version}")
         self.write(f"  Platform:    {platform}")
-        self.write(f"  Destination: {cli_path}")
         self.write(f"  URL:         {download_url}\n")
+        self.write(f"  Destination: {cli_path}")
 
     def _should_use_cache(self, cli_path: Path, use_cache: bool) -> bool:
         """Check if cached CLI should be used."""

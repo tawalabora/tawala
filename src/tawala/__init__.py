@@ -4,7 +4,6 @@ Initialization configuration.
 Exposes `PKG`, `PROJECT`, `DJANGO_SETTINGS_MODULE` for early initialization of:
 - cli.py
 - settings/config.py
-- apps.py
 
 Import these symbols before Django loads apps and settings; avoid using them elsewhere.
 """

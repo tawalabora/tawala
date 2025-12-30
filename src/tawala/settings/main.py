@@ -3,42 +3,41 @@ from typing import Any, Literal
 
 from django.utils.csp import CSP  # type: ignore[reportMissingTypeStubs]
 
-from .config import (
-    CommandsConfig,
-    DatabaseConfig,
-    PackageConfig,
-    ProjectConfig,
-    SecurityConfig,
-    StorageConfig,
-    TailwindCSSConfig,
-)
+from . import config
 
 
 class Settings:
     """Main configuration class that orchestrates settings."""
 
     def __init__(self) -> None:
-        self.package = PackageConfig()
-        self.project = ProjectConfig()
-        self.security = SecurityConfig()
-        self.database = DatabaseConfig()
-        self.storage = StorageConfig()
-        self.tailwindcss = TailwindCSSConfig()
-        self.commands = CommandsConfig()
+        self.package = config.PackageConfig()
+        self.project = config.ProjectConfig()
+        self.security = config.SecurityConfig()
+        self.database = config.DatabaseConfig()
+        self.storage = config.StorageConfig()
+        self.tailwindcss = config.TailwindCSSConfig()
+        self.commands = config.CommandsConfig()
 
 
 SETTINGS = Settings()
 
 # ==============================================================================
-# Initialization
+# Package
 # ==============================================================================
 
-PKG_NAME = SETTINGS.package.pkg_name
-PKG_VERSION = SETTINGS.package.pkg_version
-BASE_DIR = SETTINGS.project.base_dir
-APP_DIR = SETTINGS.project.app_dir
-API_DIR = SETTINGS.project.api_dir
-PUBLIC_DIR = SETTINGS.project.public_dir
+PKG_DIR: Path = SETTINGS.package.pkg_dir
+PKG_NAME: str = SETTINGS.package.pkg_name
+PKG_VERSION: str = SETTINGS.package.pkg_version
+
+
+# ==============================================================================
+# Project
+# ==============================================================================
+
+BASE_DIR: Path = SETTINGS.project.base_dir
+APP_DIR: Path = SETTINGS.project.app_dir
+API_DIR: Path = SETTINGS.project.api_dir
+PUBLIC_DIR: Path = SETTINGS.project.public_dir
 
 
 # ==============================================================================
@@ -46,15 +45,15 @@ PUBLIC_DIR = SETTINGS.project.public_dir
 # See https://docs.djangoproject.com/en/stable/howto/deployment/checklist/
 # ==============================================================================
 
-SECRET_KEY: str = SETTINGS.security.secret_key
-DEBUG: bool = SETTINGS.security.debug
-ALLOWED_HOSTS: list[str] = SETTINGS.security.allowed_hosts
+SECRET_KEY: str = SETTINGS.security.secret_key or "django-insecure-change-me-in-production"
+DEBUG: bool = SETTINGS.security.debug if SETTINGS.security.debug is not None else True
+ALLOWED_HOSTS: list[str] = SETTINGS.security.allowed_hosts or ["localhost", "127.0.0.1"]
 
 # Production security settings
 if not DEBUG:
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT: bool = True
+    SESSION_COOKIE_SECURE: bool = True
+    CSRF_COOKIE_SECURE: bool = True
     # SECURE_HSTS_SECONDS = 3600
 
 
@@ -62,7 +61,7 @@ if not DEBUG:
 # Application definition
 # ==============================================================================
 
-INSTALLED_APPS = [
+INSTALLED_APPS: list[str] = [
     PKG_NAME,
     "app",
     "django.contrib.admin",
@@ -87,9 +86,9 @@ MIDDLEWARE: list[str] = [
     "django_browser_reload.middleware.BrowserReloadMiddleware",
 ]
 
-ROOT_URLCONF = f"{PKG_NAME}.urls"
+ROOT_URLCONF: str = f"{PKG_NAME}.urls"
 
-WSGI_APPLICATION = f"{PKG_NAME}.wsgi.application"
+WSGI_APPLICATION: str = f"{PKG_NAME}.wsgi.application"
 
 
 # ==============================================================================
@@ -123,24 +122,27 @@ TEMPLATES: list[dict[str, Any]] = [
 
 def _get_database_config() -> dict[str, dict[str, Any]]:
     """Generate database configuration based on backend type."""
-    backend = SETTINGS.database.backend.lower()
+
+    backend = SETTINGS.database.backend.lower() or "sqlite3"
 
     match backend:
-        case "sqlite" | "sqlite3":  # default
+        case "sqlite" | "sqlite3":
             return {
                 "default": {
                     "ENGINE": "django.db.backends.sqlite3",
-                    "NAME": SETTINGS.database.sqlite3,
+                    "NAME": BASE_DIR / "db.sqlite3",
                 }
             }
         case "postgresql" | "postgres" | "psql" | "pgsql" | "pg" | "psycopg":
             options: dict[str, Any] = {
-                "pool": SETTINGS.database.pool,
-                "sslmode": SETTINGS.database.ssl_mode,
+                "pool": SETTINGS.database.pool if SETTINGS.database.pool is not None else False,
+                "sslmode": SETTINGS.database.ssl_mode or "prefer",
             }
 
             # Add service or connection vars
-            if SETTINGS.database.use_vars:
+            if (
+                SETTINGS.database.use_vars if SETTINGS.database.use_vars is not None else False
+            ) is True:
                 config = {
                     "USER": SETTINGS.database.user,
                     "PASSWORD": SETTINGS.database.password,
@@ -163,7 +165,7 @@ def _get_database_config() -> dict[str, dict[str, Any]]:
             raise ValueError(f"Unsupported DB backend: {backend}")
 
 
-DATABASES = _get_database_config()
+DATABASES: dict[str, dict[str, Any]] = _get_database_config()
 
 
 # ==============================================================================
@@ -171,8 +173,8 @@ DATABASES = _get_database_config()
 # https://docs.djangoproject.com/en/stable/howto/static-files/
 # ==============================================================================
 
-STATIC_URL = "/static/"
-STATIC_ROOT = SETTINGS.storage.static_root
+STATIC_URL: str = "/static/"
+STATIC_ROOT: Path = PUBLIC_DIR / "static"
 
 
 # ==============================================================================
@@ -184,7 +186,8 @@ STATIC_ROOT = SETTINGS.storage.static_root
 
 def _get_storage_config() -> dict[str, Any]:
     """Generate storage configuration based on backend type."""
-    backend = SETTINGS.storage.backend.lower()
+
+    backend = SETTINGS.storage.backend.lower() or "filesystem"
 
     base_config: dict[str, dict[str, str] | str] = {
         "staticfiles": {
@@ -193,11 +196,11 @@ def _get_storage_config() -> dict[str, Any]:
     }
 
     match backend:
-        case "filesystem" | "local" | "fs":  # default
+        case "filesystem" | "local" | "fs":
             storage_backend = "django.core.files.storage.FileSystemStorage"
             global MEDIA_URL, MEDIA_ROOT
             MEDIA_URL = "/media/"
-            MEDIA_ROOT = SETTINGS.storage.media_root
+            MEDIA_ROOT = PUBLIC_DIR / "media"
 
         case "vercel" | "vercelblob" | "vercel_blob" | "vercel-blob":
             storage_backend = f"{PKG_NAME}.backends.storage.VercelBlobStorage"
@@ -209,29 +212,47 @@ def _get_storage_config() -> dict[str, Any]:
     return base_config
 
 
-STORAGES = _get_storage_config()
-STORAGE_TOKEN = SETTINGS.storage.token
-
-
-# ==============================================================================
-# Commands
-# ==============================================================================
-
-COMMANDS = {
-    "INSTALL": SETTINGS.commands.install,
-    "BUILD": SETTINGS.commands.build,
-}
+STORAGES: dict[str, Any] = _get_storage_config()
+STORAGE_TOKEN: str = SETTINGS.storage.token
 
 
 # ==============================================================================
 # TailwindCSS
 # ==============================================================================
 
-TAILWINDCSS: dict[str, str | Path] = {
-    "VERSION": SETTINGS.tailwindcss.version,
-    "CLI": Path(SETTINGS.tailwindcss.cli),
-    "SOURCE": SETTINGS.tailwindcss.source,
-    "OUTPUT": SETTINGS.tailwindcss.output,
+
+def _get_tailwindcss_config() -> dict[str, str | Path]:
+    """Generate TailwindCSS configuration."""
+
+    version = SETTINGS.tailwindcss.version or "v4.1.18"
+    cli_path = (
+        SETTINGS.tailwindcss.cli or Path(f"~/.local/bin/tailwindcss-{version}.exe").expanduser()
+    )
+
+    return {
+        "VERSION": version,
+        "CLI": cli_path,
+        "SOURCE": APP_DIR / "static" / "app.css",
+        "OUTPUT": PKG_DIR / "static" / f"{PKG_NAME}.css",
+    }
+
+
+TAILWINDCSS = _get_tailwindcss_config()
+
+
+# ==============================================================================
+# Commands
+# ==============================================================================
+
+COMMANDS: dict[str, list[str]] = {
+    "INSTALL": SETTINGS.commands.install,
+    "BUILD": SETTINGS.commands.build
+    or [
+        "makemigrations",
+        "migrate",
+        "tailwindcss build",
+        "collectstatic --noinput",
+    ],
 }
 
 
