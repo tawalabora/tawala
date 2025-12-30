@@ -345,7 +345,7 @@ class Output(CommandOutput):
         self.command.stdout.write(self.command.style.ERROR(f"\n❌ No {mode} commands configured!"))
         self.command.stdout.write(
             self.command.style.WARNING(
-                f"   Define {mode} commands in your '.env' file or in pyproject.toml [tool.{settings.PKG_NAME}] section:\n"
+                f"   Define {mode} commands in your '.env' file or in pyproject.toml [tool.{settings.PKG['name']}] section:\n"
             )
         )
         self.command.stdout.write("")

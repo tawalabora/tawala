@@ -21,48 +21,7 @@ def get_social_media() -> dict[str, dict[str, str]]:
     Returns:
         Dictionary of social media platforms with URL and ICON
     """
-    return getattr(settings, "SOCIAL_MEDIA", {})
-
-
-@register.simple_tag
-def get_social_media_url(platform: str) -> str:
-    """
-    Get the URL for a specific social media platform.
-
-    Usage in template:
-        {% load social_media %}
-        {% get_social_media_url "facebook" as facebook_url %}
-        {% if facebook_url %}
-            <a href="{{ facebook_url }}">Visit our Facebook</a>
-        {% endif %}
-
-    Args:
-        platform: The social media platform name (e.g., "facebook", "instagram")
-
-    Returns:
-        The URL string, or empty string if not configured
-    """
-    social_media = getattr(settings, "SOCIAL_MEDIA", {})
-    return social_media.get(platform, {}).get("URL", "")
-
-
-@register.simple_tag
-def get_social_media_icon(platform: str) -> str:
-    """
-    Get the icon class for a specific social media platform.
-
-    Usage in template:
-        {% load social_media %}
-        <i class="{% get_social_media_icon 'facebook' %}"></i>
-
-    Args:
-        platform: The social media platform name (e.g., "facebook", "instagram")
-
-    Returns:
-        The icon class string, or empty string if not configured
-    """
-    social_media = getattr(settings, "SOCIAL_MEDIA", {})
-    return social_media.get(platform, {}).get("ICON", "")
+    return settings.SOCIAL_MEDIA
 
 
 @register.inclusion_tag("tawala/social_media_links.html")
@@ -84,7 +43,7 @@ def social_media_links(
         Context dictionary for the template
     """
     return {
-        "social_media": getattr(settings, "SOCIAL_MEDIA", {}),
+        "social_media": settings.SOCIAL_MEDIA,
         "css_class": css_class,
         "icon_size": icon_size,
     }
@@ -107,5 +66,77 @@ def has_social_media(platform: str) -> bool:
     Returns:
         True if the platform is configured, False otherwise
     """
-    social_media = getattr(settings, "SOCIAL_MEDIA", {})
-    return platform in social_media
+    return platform in settings.SOCIAL_MEDIA
+
+
+@register.simple_tag
+def get_facebook_url() -> str:
+    """Returns the Facebook URL."""
+    return settings.SOCIAL_MEDIA["facebook"]["URL"]
+
+
+@register.simple_tag
+def get_twitter_x_url() -> str:
+    """Returns the Twitter/X URL."""
+    return settings.SOCIAL_MEDIA["twitter-x"]["URL"]
+
+
+@register.simple_tag
+def get_instagram_url() -> str:
+    """Returns the Instagram URL."""
+    return settings.SOCIAL_MEDIA["instagram"]["URL"]
+
+
+@register.simple_tag
+def get_linkedin_url() -> str:
+    """Returns the LinkedIn URL."""
+    return settings.SOCIAL_MEDIA["linkedin"]["URL"]
+
+
+@register.simple_tag
+def get_whatsapp_url() -> str:
+    """Returns the WhatsApp URL."""
+    return settings.SOCIAL_MEDIA["whatsapp"]["URL"]
+
+
+@register.simple_tag
+def get_youtube_url() -> str:
+    """Returns the YouTube URL."""
+    return settings.SOCIAL_MEDIA["youtube"]["URL"]
+
+
+# Specific getters for each platform - Icon
+@register.simple_tag
+def get_facebook_icon() -> str:
+    """Returns the Facebook icon class."""
+    return settings.SOCIAL_MEDIA["facebook"]["ICON"]
+
+
+@register.simple_tag
+def get_twitter_x_icon() -> str:
+    """Returns the Twitter/X icon class."""
+    return settings.SOCIAL_MEDIA["twitter-x"]["ICON"]
+
+
+@register.simple_tag
+def get_instagram_icon() -> str:
+    """Returns the Instagram icon class."""
+    return settings.SOCIAL_MEDIA["instagram"]["ICON"]
+
+
+@register.simple_tag
+def get_linkedin_icon() -> str:
+    """Returns the LinkedIn icon class."""
+    return settings.SOCIAL_MEDIA["linkedin"]["ICON"]
+
+
+@register.simple_tag
+def get_whatsapp_icon() -> str:
+    """Returns the WhatsApp icon class."""
+    return settings.SOCIAL_MEDIA["whatsapp"]["ICON"]
+
+
+@register.simple_tag
+def get_youtube_icon() -> str:
+    """Returns the YouTube icon class."""
+    return settings.SOCIAL_MEDIA["youtube"]["ICON"]

@@ -6,14 +6,7 @@ from christianwhocodes.helpers import TypeConverter
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 
-from .. import PKG, PROJECT
-
-
-class PackageConf:
-    def __init__(self) -> None:
-        self.pkg_dir: pathlib.Path = PKG.dir
-        self.pkg_name: str = PKG.name
-        self.pkg_version: str = PKG.version
+from .project import PROJECT
 
 
 class ConfField:
@@ -182,19 +175,11 @@ class ConfField:
         )
 
 
-class ProjectConf:
+class Conf:
     """Base configuration class that handles loading from environment variables and TOML files."""
 
-    _env = PROJECT.env
-    _toml = PROJECT.toml
-
-    def __init__(self) -> None:
-        self.env = self._env
-        self.toml = self._toml
-        self.base_dir: pathlib.Path = PROJECT.dir
-
-    @classmethod
-    def _get_from_toml(cls, key: Optional[str]) -> Any:
+    @staticmethod
+    def _get_from_toml(key: Optional[str]) -> Any:
         """
         Get value from TOML configuration.
 
@@ -208,7 +193,7 @@ class ProjectConf:
         if key is None:
             return None
         else:
-            current: Any = cls._toml
+            current: Any = PROJECT["toml"]
             for k in key.split("."):
                 if isinstance(current, dict) and k in current:
                     current = cast(Any, current[k])
@@ -234,7 +219,7 @@ class ProjectConf:
             The configuration value from the first available source (raw, no casting)
         """
         # Try environment variable first (if env_key is provided and exists)
-        env_config = cls._env
+        env_config = PROJECT["env"]
         if env_key is not None and env_key in env_config:
             return env_config[env_key]
 
@@ -266,7 +251,7 @@ class ProjectConf:
 
             # Create property getter
             def make_getter(name: str, cfg: dict[str, Any]):
-                def getter(self: "ProjectConf") -> Any:
+                def getter(self: "Conf") -> Any:
                     env_key = cfg["env"]
                     toml_key = cfg["toml"]
                     target_type = cfg["type"]
@@ -284,59 +269,7 @@ class ProjectConf:
             )
 
 
-class SecurityConf(ProjectConf):
-    """Security-related configuration settings."""
-
-    secret_key = ConfField(env="SECRET_KEY", toml="secret-key", type=str)
-    debug = ConfField(env="DEBUG", toml="debug", type=bool)
-    allowed_hosts = ConfField(env="ALLOWED_HOSTS", toml="allowed-hosts", type="list[str]")
-
-
-class AppConf(ProjectConf):
-    """Site-related configuration settings."""
-
-    name = ConfField(env="APP_NAME", toml="app.name", type=str)
-    short_name = ConfField(env="APP_SHORT_NAME", toml="app.short-name", type=str)
-    description = ConfField(env="APP_DESCRIPTION", toml="app.description", type=str)
-
-
-class DatabaseConf(ProjectConf):
-    """Database configuration settings."""
-
-    backend = ConfField(env="DB_BACKEND", toml="db.backend", type=str)
-    service = ConfField(env="DB_SERVICE", toml="db.service", type=str)
-    pool = ConfField(env="DB_POOL", toml="db.pool", type=bool)
-    ssl_mode = ConfField(env="DB_SSL_MODE", toml="db.ssl-mode", type=str)
-    use_vars = ConfField(env="DB_USE_VARS", toml="db.use-vars", type=bool)
-    user = ConfField(env="DB_USER", type=str)
-    password = ConfField(env="DB_PASSWORD", type=str)
-    name = ConfField(env="DB_NAME", type=str)
-    host = ConfField(env="DB_HOST", type=str)
-    port = ConfField(env="DB_PORT", type=str)
-
-
-class StorageConf(ProjectConf):
-    """Storage configuration settings."""
-
-    backend = ConfField(env="STORAGE_BACKEND", toml="storage.backend", type=str)
-    token = ConfField(env="BLOB_READ_WRITE_TOKEN", toml="storage.token", type=str)
-
-
-class TailwindCSSConf(ProjectConf):
-    """TailwindCSS configuration settings."""
-
-    version = ConfField(env="TAILWINDCSS_VERSION", toml="tailwindcss.version", type=str)
-    cli = ConfField(env="TAILWINDCSS_CLI", toml="tailwindcss.cli", type=pathlib.Path)
-
-
-class CommandsConf(ProjectConf):
-    """Install/Build Commands to be executed settings."""
-
-    install = ConfField(env="COMMANDS_INSTALL", toml="commands.install", type="list[str]")
-    build = ConfField(env="COMMANDS_BUILD", toml="commands.build", type="list[str]")
-
-
-class EmailConf(ProjectConf):
+class EmailConf(Conf):
     """Email configuration settings."""
 
     backend = ConfField(env="EMAIL_BACKEND", toml="email.backend", type=str)
@@ -345,45 +278,3 @@ class EmailConf(ProjectConf):
     use_tls = ConfField(env="EMAIL_USE_TLS", toml="email.use-tls", type=bool)
     host_user = ConfField(env="EMAIL_HOST_USER", toml="email.host-user", type=str)
     host_password = ConfField(env="EMAIL_HOST_PASSWORD", toml="email.host-password", type=str)
-
-
-class ContactAddressConf(ProjectConf):
-    """Contact Address configuration settings."""
-
-    country = ConfField(env="CONTACT_ADDRESS_COUNTRY", toml="contact.address.country", type=str)
-    state = ConfField(env="CONTACT_ADDRESS_STATE", toml="contact.address.state", type=str)
-    city = ConfField(env="CONTACT_ADDRESS_CITY", toml="contact.address.city", type=str)
-    street = ConfField(env="CONTACT_ADDRESS_STREET", toml="contact.address.street", type=str)
-
-
-class ContactEmailConf(ProjectConf):
-    """Contact Email configuration settings."""
-
-    primary = ConfField(env="CONTACT_EMAIL_PRIMARY", toml="contact.email.primary", type="email")
-    additional = ConfField(
-        env="CONTACT_EMAIL_ADDITIONAL",
-        toml="contact.email.additional",
-        type="list[email]",
-    )
-
-
-class ContactNumberConf(ProjectConf):
-    """Contact Phone Number configuration settings."""
-
-    primary = ConfField(env="CONTACT_NUMBER_PRIMARY", toml="contact.number.primary", type=str)
-    additional = ConfField(
-        env="CONTACT_NUMBER_ADDITIONAL",
-        toml="contact.number.additional",
-        type="list[str]",
-    )
-
-
-class SocialMediaConf(ProjectConf):
-    """Social Media configuration settings."""
-
-    facebook = ConfField(env="SOCIAL_MEDIA_FACEBOOK", toml="social-media.facebook", type=str)
-    x = ConfField(env="SOCIAL_MEDIA_TWITTER", toml="social-media.x", type=str)
-    instagram = ConfField(env="SOCIAL_MEDIA_INSTAGRAM", toml="social-media.instagram", type=str)
-    linkedin = ConfField(env="SOCIAL_MEDIA_LINKEDIN", toml="social-media.linkedin", type=str)
-    whatsapp = ConfField(env="SOCIAL_MEDIA_WHATSAPP", toml="social-media.whatsapp", type=str)
-    youtube = ConfField(env="SOCIAL_MEDIA_YOUTUBE", toml="social-media.youtube", type=str)

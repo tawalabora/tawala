@@ -33,7 +33,7 @@ class VercelJSONFileGenerator(FileGenerator):
     @property
     def file_path(self) -> Path:
         """Return the path for the vercel.json."""
-        return settings.BASE_DIR / "vercel.json"
+        return settings.PROJECT["dirs"]["BASE"] / "vercel.json"
 
     @property
     def data(self) -> str:
@@ -41,8 +41,8 @@ class VercelJSONFileGenerator(FileGenerator):
         return (
             "{\n"
             '  "$schema": "https://openapi.vercel.sh/vercel.json",\n'
-            f'  "installCommand": "uv run {settings.PKG_NAME} runinstall",\n'
-            f'  "buildCommand": "uv run {settings.PKG_NAME} runbuild",\n'
+            f'  "installCommand": "uv run {settings.PKG["name"]} runinstall",\n'
+            f'  "buildCommand": "uv run {settings.PKG["name"]} runbuild",\n'
             '  "rewrites": [\n'
             "    {\n"
             '      "source": "/(.*)",\n'
@@ -64,12 +64,12 @@ class ASGIFileGenerator(FileGenerator):
     @property
     def file_path(self) -> Path:
         """Return the path for the asgi.py"""
-        return settings.API_DIR / "asgi.py"
+        return settings.PROJECT["dirs"]["API"] / "asgi.py"
 
     @property
     def data(self) -> str:
         """Return template content for asgi.py."""
-        return f"from {settings.PKG_NAME} import asgi\n\napp = asgi.application\n"
+        return f"from {settings.PKG['name']} import asgi\n\napp = asgi.application\n"
 
 
 class WSGIFileGenerator(FileGenerator):
@@ -83,12 +83,12 @@ class WSGIFileGenerator(FileGenerator):
     @property
     def file_path(self) -> Path:
         """Return the path for the wsgi.py."""
-        return settings.API_DIR / "wsgi.py"
+        return settings.PROJECT["dirs"]["API"] / "wsgi.py"
 
     @property
     def data(self) -> str:
         """Return template content for wsgi.py file."""
-        return f"from {settings.PKG_NAME} import wsgi\n\napp = wsgi.application\n"
+        return f"from {settings.PKG['name']} import wsgi\n\napp = wsgi.application\n"
 
 
 class Command(BaseCommand):

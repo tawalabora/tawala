@@ -171,12 +171,12 @@ def tailwindcss() -> SafeString:
     """
     try:
         config: dict[str, Path] = settings.TAILWINDCSS
-        output_css: Path = config["OUTPUT"]
+        output_css: Path = config["output"]
 
         # Start watcher on first template tag use (only in DEBUG mode and if not disabled)
         if settings.DEBUG and not TailwindWatcher.is_disabled():
             watcher: TailwindWatcher = TailwindWatcher.get_instance()
-            watcher.start(source_css=config["SOURCE"], output_css=output_css, cli_path=config["CLI"])
+            watcher.start(source_css=config["source"], output_css=output_css, cli_path=config["cli"])
 
         # Generate the static URL
         output_static_dir: Path = output_css.parent

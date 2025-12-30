@@ -23,7 +23,7 @@ class InstallCommandGenerator(CommandGenerator):
 
     def get_commands_from_settings(self) -> list[str]:
         """Retrieve install commands."""
-        return settings.COMMANDS["INSTALL"]
+        return settings.COMMANDS["install"]
 
     def create_output_handler(self) -> CommandOutput:
         """Create the output handler for install commands."""

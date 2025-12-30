@@ -170,10 +170,10 @@ class InstallHandler:
         if self.verbose:
             self._display_platform_info(platform)
 
-        cli_path = self.config["CLI"]
+        cli_path = self.config["cli"]
         self._ensure_directory_exists(cli_path.parent)
 
-        version = self.config["VERSION"]
+        version = self.config["version"]
         download_url = self.downloader.get_download_url(version, platform)
 
         if self.verbose:
@@ -302,9 +302,9 @@ class BuildHandler:
 
     def build(self) -> None:
         """Build the TailwindCSS output file."""
-        cli_path = self.config["CLI"]
-        source_css = self.config["SOURCE"]
-        output_css = self.config["OUTPUT"]
+        cli_path = self.config["cli"]
+        source_css = self.config["source"]
+        output_css = self.config["output"]
 
         self._validate_source_file(source_css)
         self._ensure_output_directory(output_css.parent)
@@ -352,7 +352,7 @@ class BuildHandler:
         except FileNotFoundError:
             raise CommandError(
                 f"TailwindCSS CLI not found at '{cli_path}'. "
-                f"Run '{settings.PKG_NAME} tailwindcss install' first."
+                f"Run '{settings.PKG['name']} tailwindcss install' first."
             )
         except CalledProcessError as e:
             raise CommandError(f"TailwindCSS build failed: {e}")
@@ -377,7 +377,7 @@ class CleanHandler:
 
     def clean(self) -> None:
         """Delete the built TailwindCSS output file."""
-        output_css = self.config["OUTPUT"]
+        output_css = self.config["output"]
 
         if not output_css.exists():
             return

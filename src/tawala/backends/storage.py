@@ -12,7 +12,7 @@ class VercelBlobStorage(Storage):
     """Custom storage backend for Vercel Blob."""
 
     def __init__(self) -> None:
-        self.client: BlobClient = BlobClient(settings.STORAGE_TOKEN)
+        self.client: BlobClient = BlobClient(settings.STORAGES["default"]["TOKEN"])
 
     def _save(self, name: str, content: File) -> str:
         """Upload file to Vercel Blob"""
