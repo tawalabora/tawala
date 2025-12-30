@@ -19,7 +19,7 @@ class BuildCommandGenerator(CommandGenerator):
 
     def get_commands_from_settings(self) -> list[str]:
         """Retrieve build commands."""
-        return settings.COMMANDS["BUILD"]
+        return settings.COMMANDS["build"]
 
     def create_output_handler(self) -> CommandOutput:
         """Create the output handler for build commands."""

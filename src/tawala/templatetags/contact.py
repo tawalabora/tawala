@@ -13,31 +13,31 @@ def contact_address() -> dict[str, str]:
         {% contact_address as address %}
         {{ address.COUNTRY }}, {{ address.CITY }}
     """
-    return settings.CONTACT["ADDRESS"]
+    return settings.CONTACT["address"]
 
 
 @register.simple_tag
 def get_contact_address_country() -> str:
     """Returns the contact address country."""
-    return settings.CONTACT["ADDRESS"]["COUNTRY"]
+    return settings.CONTACT["address"]["COUNTRY"]
 
 
 @register.simple_tag
 def get_contact_address_state() -> str:
     """Returns the contact address state."""
-    return settings.CONTACT["ADDRESS"]["STATE"]
+    return settings.CONTACT["address"]["STATE"]
 
 
 @register.simple_tag
 def get_contact_address_city() -> str:
     """Returns the contact address city."""
-    return settings.CONTACT["ADDRESS"]["CITY"]
+    return settings.CONTACT["address"]["CITY"]
 
 
 @register.simple_tag
 def get_contact_address_street() -> str:
     """Returns the contact address street."""
-    return settings.CONTACT["ADDRESS"]["STREET"]
+    return settings.CONTACT["address"]["STREET"]
 
 
 @register.simple_tag
@@ -52,19 +52,19 @@ def contact_email() -> dict[str, str | list[str]]:
             {{ email }}
         {% endfor %}
     """
-    return settings.CONTACT["EMAIL"]
+    return settings.CONTACT["email"]
 
 
 @register.simple_tag
 def get_contact_email_primary() -> str:
     """Returns the primary contact email."""
-    return settings.CONTACT["EMAIL"]["PRIMARY"]
+    return settings.CONTACT["email"]["PRIMARY"]
 
 
 @register.simple_tag
 def get_contact_email_additional() -> list[str]:
     """Returns the list of additional contact emails."""
-    return settings.CONTACT["EMAIL"]["ADDITIONAL"]
+    return settings.CONTACT["email"]["ADDITIONAL"]
 
 
 @register.simple_tag
@@ -79,16 +79,16 @@ def contact_phone() -> dict[str, str | list[str]]:
             {{ phone }}
         {% endfor %}
     """
-    return settings.CONTACT["PHONE"]
+    return settings.CONTACT["phone"]
 
 
 @register.simple_tag
 def get_contact_phone_primary() -> str:
     """Returns the primary contact phone number."""
-    return settings.CONTACT["PHONE"]["PRIMARY"]
+    return settings.CONTACT["phone"]["PRIMARY"]
 
 
 @register.simple_tag
 def get_contact_phone_additional() -> list[str]:
     """Returns the list of additional contact phone numbers."""
-    return settings.CONTACT["PHONE"]["ADDITIONAL"]
+    return settings.CONTACT["phone"]["ADDITIONAL"]

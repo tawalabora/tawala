@@ -8,27 +8,27 @@ from christianwhocodes.helpers import ExitCode, Version
 from christianwhocodes.stdout import print
 from django.core.management import ManagementUtility
 
-from . import DJANGO_SETTINGS_MODULE, PKG, PROJECT
+from . import DJANGO_SETTINGS_MODULE, PACKAGE, PROJECT_ROOT
 
 
 def main() -> Optional[NoReturn]:
-    f"""Main entry point for the {PKG.name.capitalize()} CLI."""
+    f"""Main entry point for the {PACKAGE.name.capitalize()} CLI."""
 
     match argv[1]:
         case "-v" | "--version" | "version":
-            if PKG.version != Version.placeholder():
-                print(PKG.version)
+            if PACKAGE.version != Version.placeholder():
+                print(PACKAGE.version)
                 exit(ExitCode.SUCCESS)
             else:
-                print(f"{PKG.version}: Could not determine {PKG.name} version.")
+                print(f"{PACKAGE.version}: Could not determine {PACKAGE.name} version.")
                 exit(ExitCode.ERROR)
 
         case _:
-            path.insert(0, str(PROJECT.dir))
+            path.insert(0, str(PROJECT_ROOT.dir))
             environ.setdefault("DJANGO_SETTINGS_MODULE", DJANGO_SETTINGS_MODULE)
 
             utility = ManagementUtility(argv)
-            utility.prog_name = PKG.name
+            utility.prog_name = PACKAGE.name
             utility.execute()
 
 

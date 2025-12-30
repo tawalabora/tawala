@@ -3,7 +3,9 @@ Initialization configuration.
 
 Exposes `PKG`, `PROJECT`, `DJANGO_SETTINGS_MODULE` for early initialization of:
 - cli.py
-- settings/conf.py
+- {a|w}sgi.py
+- config/pkg.py
+- config/project.py
 
 Import these symbols before Django loads apps and settings; avoid using them elsewhere.
 """
@@ -17,7 +19,7 @@ from christianwhocodes.stdout import Text, print
 from dotenv import dotenv_values
 
 
-class _Package:
+class Package:
     _file: Path = Path(__file__).resolve()
 
     def __init__(self) -> None:
@@ -26,12 +28,12 @@ class _Package:
         self.version = Version.get(self.name)[0]
 
 
-PKG = _Package()
+PACKAGE = Package()
 
-DJANGO_SETTINGS_MODULE = f"{PKG.name}.settings.main"
+DJANGO_SETTINGS_MODULE = f"{PACKAGE.name}.settings"
 
 
-class _Project:
+class ProjectRoot:
     """Directory path configuration and validation of project structure."""
 
     _dir: Optional[Path] = None
@@ -42,15 +44,17 @@ class _Project:
     def _load_project(cls) -> Optional[NoReturn]:
         try:
             dir: Path = Path.cwd()
-            toml_section: dict[str, Any] = PyProject(dir / "pyproject.toml").data["tool"][PKG.name]
+            toml_section: dict[str, Any] = PyProject(dir / "pyproject.toml").data["tool"][
+                PACKAGE.name
+            ]
 
         except (FileNotFoundError, KeyError):
             cls._valid_project = False
             print(
-                f"Are you currently executing in a {PKG.name.capitalize()} app base directory? "
-                f"If not navigate to your app's root or create a new {PKG.name.capitalize()} app to run the command.\n"
-                f"'tool.{PKG.name}'section must be included in 'pyproject.toml' even if empty, "
-                f"as it serves as a {PKG.name.capitalize()} app project identifier.",
+                f"Are you currently executing in a {PACKAGE.name.capitalize()} app base directory? "
+                f"If not navigate to your app's root or create a new {PACKAGE.name.capitalize()} app to run the command.\n"
+                f"'tool.{PACKAGE.name}'section must be included in 'pyproject.toml' even if empty, "
+                f"as it serves as a {PACKAGE.name.capitalize()} app project identifier.",
                 Text.WARNING,
             )
 
@@ -94,7 +98,7 @@ class _Project:
         }
 
 
-PROJECT = _Project()
+PROJECT_ROOT = ProjectRoot()
 
 
-__all__ = ["PKG", "DJANGO_SETTINGS_MODULE", "PROJECT"]
+__all__ = ["PACKAGE", "DJANGO_SETTINGS_MODULE", "PROJECT_ROOT"]

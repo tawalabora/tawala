@@ -8,7 +8,7 @@ from django.core.management.base import BaseCommand
 class ArtType(StrEnum):
     """Enumeration of available ASCII art types."""
 
-    PROG_NAME = settings.PKG_NAME
+    PROG_NAME = settings.PKG["name"]
     DEV = "dev"
     BUILD = "build"
     INSTALL = "install"

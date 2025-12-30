@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from django import template
 from django.conf import settings
 from django.templatetags.static import static
@@ -21,7 +22,7 @@ class StaticAssetResolver:
         """Get the URL for a static asset.
 
         Args:
-            relative_path: Path to the asset relative to APP_DIR/static
+            relative_path: Path to the asset relative to app_dir/static
             fallback_path: Fallback path relative to static directory
 
         Returns:
@@ -43,45 +44,45 @@ class StaticAssetResolver:
 
 
 # Initialize the resolver
-_asset_resolver = StaticAssetResolver(settings.APP_DIR)
+_asset_resolver = StaticAssetResolver(settings.PROJECT["dirs"]["APP"])
 
 
 @register.simple_tag
-def app_name() -> str:
-    """Return the application name from settings.
+def site_name() -> str:
+    """Return the site name from settings.
 
     Returns:
-        The application name
+        The site name
     """
-    return settings.APP["NAME"]
+    return settings.SITE["name"]
 
 
 @register.simple_tag
-def app_short_name() -> str:
-    """Return the application short name from settings.
+def site_short_name() -> str:
+    """Return the site short name from settings.
 
     Returns:
-        The application shortname
+        The site shortname
     """
-    return settings.APP["SHORT_NAME"]
+    return settings.SITE["short_name"]
 
 
 @register.simple_tag
-def app_description() -> str:
-    """Return the application description from settings.
+def site_description() -> str:
+    """Return the site description from settings.
 
     Returns:
-        The application description
+        The site description
     """
-    return settings.APP["DESCRIPTION"]
+    return settings.SITE["description"]
 
 
 @register.simple_tag
-def app_logo_url() -> str:
-    """Return the application logo URL from settings.
+def site_logo_url() -> str:
+    """Return the site logo URL from settings.
 
     Returns:
-        The application logo URL
+        The site logo URL
     """
     return _asset_resolver.get_asset_url(
         relative_path="app/img/logo.png", fallback_path="defaults/logo.png"
@@ -89,11 +90,11 @@ def app_logo_url() -> str:
 
 
 @register.simple_tag
-def app_favicon_url() -> str:
-    """Return the application favicon URL from settings.
+def site_favicon_url() -> str:
+    """Return the site favicon URL from settings.
 
     Returns:
-        The application favicon URL
+        The site favicon URL
     """
     return _asset_resolver.get_asset_url(
         relative_path="app/img/favicon.ico", fallback_path="defaults/favicon.ico"
@@ -101,11 +102,11 @@ def app_favicon_url() -> str:
 
 
 @register.simple_tag
-def app_apple_touch_icon_url() -> str:
-    """Return the application Apple Touch Icon URL from settings.
+def site_apple_touch_icon_url() -> str:
+    """Return the site Apple Touch Icon URL from settings.
 
     Returns:
-        The application Apple Touch Icon URL
+        The site Apple Touch Icon URL
     """
     return _asset_resolver.get_asset_url(
         relative_path="app/img/apple-touch-icon.png",

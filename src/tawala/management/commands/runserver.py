@@ -78,7 +78,7 @@ class Command(RunserverCommand):
     def check_migrations(self) -> None:
         f"""Check for unapplied migrations and display a warning.
 
-        Overrides Django's default check_migrations to use '{settings.PKG_NAME} migrate'
+        Overrides Django's default check_migrations to use '{settings.PKG["name"]} migrate'
         instead of 'python manage.py migrate' in the warning message.
 
         Prints a notice if there are unapplied migrations that could affect
@@ -109,7 +109,7 @@ class Command(RunserverCommand):
                     }
                 )
             )
-            OVERRIDE = f"{settings.PKG_NAME} migrate"  # Only thing we're overriding
+            OVERRIDE = f"{settings.PKG['name']} migrate"  # Only thing we're overriding
             self.stdout.write(self.style.NOTICE(f"Run {OVERRIDE} to apply them."))
 
     def on_bind(self, server_port: int) -> None:
@@ -196,7 +196,7 @@ class Command(RunserverCommand):
         """Print version."""
 
         self.stdout.write(
-            f"  🔧 {settings.PKG_NAME.capitalize()} version: {self.style.HTTP_NOT_MODIFIED(settings.PKG_VERSION)}"
+            f"  🔧 {settings.PKG['name'].capitalize()} version: {self.style.HTTP_NOT_MODIFIED(settings.PKG['version'])}"
         )
 
     def _print_local_url(self, server_port: int) -> None:
