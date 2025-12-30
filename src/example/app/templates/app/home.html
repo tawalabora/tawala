@@ -19,7 +19,7 @@
     <section class="container-full py-8">
       <h1>
         <span>{% app_short_name %}</span>
-        {% contact_email_additional as emails %}
+        {% get_contact_email_additional as emails %}
         {% for email in emails %}
           <span> - </span>
           <span class="text-accent">{{ email }}</span>

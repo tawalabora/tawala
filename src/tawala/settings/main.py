@@ -21,6 +21,7 @@ class Settings:
         self.contact_address = conf.ContactAddressConf()
         self.contact_email = conf.ContactEmailConf()
         self.contact_number = conf.ContactNumberConf()
+        self.social_media = conf.SocialMediaConf()
 
 
 SETTINGS: Settings = Settings()
@@ -337,3 +338,36 @@ CONTACT: dict[str, dict[str, str | list[str]]] = {
         "ADDITIONAL": SETTINGS.contact_number.additional,
     },
 }
+
+
+# ==============================================================================
+# Social Media
+# ==============================================================================
+
+# Mapping of social media platforms to their Bootstrap icon classes
+SOCIAL_MEDIA_ICONS: dict[str, str] = {
+    "facebook": "bi bi-facebook",
+    "x": "bi bi-twitter-x",
+    "instagram": "bi bi-instagram",
+    "linkedin": "bi bi-linkedin",
+    "whatsapp": "bi bi-whatsapp",
+    "youtube": "bi bi-youtube",
+}
+
+
+def _get_social_media_config() -> dict[str, dict[str, str]]:
+    """Generate social media configuration dynamically."""
+    config: dict[str, dict[str, str]] = {}
+
+    for platform, icon in SOCIAL_MEDIA_ICONS.items():
+        url = getattr(SETTINGS.social_media, platform, "")
+        if url:  # Only include platforms with configured URLs
+            config[platform] = {
+                "URL": url,
+                "ICON": icon,
+            }
+
+    return config
+
+
+SOCIAL_MEDIA: dict[str, dict[str, str]] = _get_social_media_config()
