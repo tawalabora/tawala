@@ -2,10 +2,9 @@
 Initialization configuration.
 
 Exposes `PKG`, `PROJECT`, `DJANGO_SETTINGS_MODULE` for early initialization of:
-- cli.py
-- {a|w}sgi.py
-- config/pkg.py
-- config/project.py
+- api/*.py
+- settings/pkg.py
+- settings/project.py
 
 Import these symbols before Django loads apps and settings; avoid using them elsewhere.
 """
@@ -29,8 +28,6 @@ class Package:
 
 
 PACKAGE = Package()
-
-DJANGO_SETTINGS_MODULE = f"{PACKAGE.name}.settings"
 
 
 class ProjectRoot:
@@ -101,4 +98,4 @@ class ProjectRoot:
 PROJECT_ROOT = ProjectRoot()
 
 
-__all__ = ["PACKAGE", "DJANGO_SETTINGS_MODULE", "PROJECT_ROOT"]
+__all__ = ["PACKAGE", "PROJECT_ROOT"]

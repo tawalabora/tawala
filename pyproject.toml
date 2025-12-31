@@ -24,8 +24,8 @@ repository = "https://github.com/tawalabora/tawala"
 issues = "https://github.com/tawalabora/tawala/issues"
 
 [project.scripts]
-tawala = "tawala.cli:main"
-twl = "tawala.cli:main"
+tawala = "tawala.api.cli:main"
+twl = "tawala.api.cli:main"
 
 [dependency-groups]
 dev = [

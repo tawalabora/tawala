@@ -119,7 +119,7 @@ class TailwindWatcher:
             ValueError: If the path exists but is not a file
         """
         if not (source_css.exists() and source_css.is_file()):
-            raise FileNotFoundError(f"TailwindCSS source file not found: {source_css}")
+            raise FileNotFoundError(f"Tailwind source CSS file not found: {source_css}")
 
     def _ensure_output_directory(self, output_css: Path) -> None:
         """Create the output directory if it doesn't exist.
@@ -163,14 +163,14 @@ class TailwindWatcher:
 
 
 @register.simple_tag
-def tailwindcss() -> SafeString:
+def tailwind_css() -> SafeString:
     """Generate the CSS link tag and start the Tailwind watcher (in DEBUG mode).
 
     Returns:
         SafeString containing the CSS link tag HTML
     """
     try:
-        config: dict[str, Path] = settings.TAILWINDCSS
+        config: dict[str, Path] = settings.TAILWIND
         output_css: Path = config["output"]
 
         # Start watcher on first template tag use (only in DEBUG mode and if not disabled)

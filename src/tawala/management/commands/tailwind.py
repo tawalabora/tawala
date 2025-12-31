@@ -1,9 +1,9 @@
 """
-Management command for TailwindCSS CLI installation and build management.
+Management command for Tailwind CLI installation and build management.
 
 This module provides a clean, OOP-based interface for:
-- Installing the TailwindCSS CLI binary
-- Building TailwindCSS output files
+- Installing the Tailwind CLI binary
+- Building Tailwind output files
 - Cleaning generated CSS files
 """
 
@@ -71,8 +71,8 @@ class PlatformInfo:
         return f"{self.os_name}-{self.architecture}"
 
 
-class TailwindCSSDownloader:
-    """Handles downloading and installation of TailwindCSS CLI."""
+class TailwindDownloader:
+    """Handles downloading and installation of Tailwind CLI."""
 
     BASE_URL = "https://github.com/tailwindlabs/tailwindcss/releases"
 
@@ -81,7 +81,7 @@ class TailwindCSSDownloader:
         self.verbose = verbose
 
     def get_download_url(self, version: str, platform: PlatformInfo) -> str:
-        """Generate the download URL for the TailwindCSS CLI binary."""
+        """Generate the download URL for the Tailwind CLI binary."""
         filename = self._get_filename(platform)
         return f"{self.BASE_URL}/download/{version}/{filename}"
 
@@ -149,7 +149,7 @@ class TailwindCSSDownloader:
 
 
 class InstallHandler:
-    """Handles the installation of TailwindCSS CLI."""
+    """Handles the installation of Tailwind CLI."""
 
     def __init__(
         self,
@@ -162,10 +162,10 @@ class InstallHandler:
         self.write = stdout_writer
         self.style = style
         self.verbose = verbose
-        self.downloader = TailwindCSSDownloader(stdout_writer, verbose)
+        self.downloader = TailwindDownloader(stdout_writer, verbose)
 
     def install(self, auto_confirm: bool = False, use_cache: bool = False) -> None:
-        """Install the TailwindCSS CLI binary."""
+        """Install the Tailwind CLI binary."""
         platform = PlatformInfo()
         if self.verbose:
             self._display_platform_info(platform)
@@ -223,9 +223,7 @@ class InstallHandler:
         if cli_path.exists() and use_cache:
             if self.verbose:
                 self.write(
-                    self.style.HTTP_NOT_MODIFIED(
-                        "\nUsing cached TailwindCSS CLI. Skipping download.\n"
-                    )
+                    self.style.HTTP_NOT_MODIFIED("\nUsing cached Tailwind CLI. Skipping download.\n")
                 )
             return True
         return False
@@ -240,7 +238,7 @@ class InstallHandler:
             return True
 
         if self.verbose:
-            self.write(self.style.WARNING(f"\n⚠ TailwindCSS CLI already exists at: {cli_path}"))
+            self.write(self.style.WARNING(f"\n⚠ Tailwind CLI already exists at: {cli_path}"))
         overwrite = input("Overwrite? (y/N): ").strip().lower()
 
         if overwrite == "y":
@@ -271,14 +269,14 @@ class InstallHandler:
         version: str,
         platform: PlatformInfo,
     ) -> None:
-        """Download and install the TailwindCSS CLI."""
+        """Download and install the Tailwind CLI."""
         self.downloader.download(download_url, cli_path)
         self.downloader.make_executable(cli_path)
 
         if self.verbose:
             self.write(
                 self.style.SUCCESS(
-                    f"\n✓ TailwindCSS CLI successfully installed at: {cli_path}\n"
+                    f"\n✓ Tailwind CLI successfully installed at: {cli_path}\n"
                     f"  Platform: {platform}\n"
                     f"  Version: {version}"
                 )
@@ -286,7 +284,7 @@ class InstallHandler:
 
 
 class BuildHandler:
-    """Handles building TailwindCSS output files."""
+    """Handles building Tailwind output files."""
 
     def __init__(
         self,
@@ -301,7 +299,7 @@ class BuildHandler:
         self.verbose = verbose
 
     def build(self) -> None:
-        """Build the TailwindCSS output file."""
+        """Build the Tailwind output css file."""
         cli_path = self.config["cli"]
         source_css = self.config["source"]
         output_css = self.config["output"]
@@ -315,7 +313,7 @@ class BuildHandler:
     def _validate_source_file(self, source_css: Path) -> None:
         """Validate that the source CSS file exists."""
         if not (source_css.exists() and source_css.is_file()):
-            raise CommandError(f"TailwindCSS source file not found: {source_css}")
+            raise CommandError(f"Tailwind source css file not found: {source_css}")
 
     def _ensure_output_directory(self, output_dir: Path) -> None:
         """Ensure the output directory exists."""
@@ -329,7 +327,7 @@ class BuildHandler:
 
     @staticmethod
     def _build_command(cli_path: Path, source_css: Path, output_css: Path) -> list[str]:
-        """Build the TailwindCSS CLI command."""
+        """Build the Tailwind CLI command."""
         return [
             str(cli_path),
             "-i",
@@ -340,28 +338,28 @@ class BuildHandler:
         ]
 
     def _execute_build(self, command: list[str], cli_path: Path) -> None:
-        """Execute the TailwindCSS build command."""
+        """Execute the Tailwind build command."""
         try:
             if self.verbose:
-                self.write("Building TailwindCSS output file...")
+                self.write("Building Tailwind output CSS file...")
                 run(command, check=True)
-                self.write(self.style.SUCCESS("✓ TailwindCSS output file built successfully!"))
+                self.write(self.style.SUCCESS("✓ Tailwind output CSS file built successfully!"))
             else:
-                # Suppress all output from TailwindCSS CLI
+                # Suppress all output from Tailwind CLI
                 run(command, check=True, stdout=DEVNULL, stderr=DEVNULL)
         except FileNotFoundError:
             raise CommandError(
-                f"TailwindCSS CLI not found at '{cli_path}'. "
-                f"Run '{settings.PKG['name']} tailwindcss install' first."
+                f"Tailwind CLI not found at '{cli_path}'. "
+                f"Run '{settings.PKG['name']} tailwind install' first."
             )
         except CalledProcessError as e:
-            raise CommandError(f"TailwindCSS build failed: {e}")
+            raise CommandError(f"Tailwind build failed: {e}")
         except Exception as e:
             raise CommandError(f"Unexpected error: {e}")
 
 
 class CleanHandler:
-    """Handles cleaning of TailwindCSS output files."""
+    """Handles cleaning of Tailwind output CSS file."""
 
     def __init__(
         self,
@@ -376,7 +374,7 @@ class CleanHandler:
         self.verbose = verbose
 
     def clean(self) -> None:
-        """Delete the built TailwindCSS output file."""
+        """Delete the built Tailwind output CSS file."""
         output_css = self.config["output"]
 
         if not output_css.exists():
@@ -398,9 +396,9 @@ class CleanHandler:
 
 
 class Command(BaseCommand):
-    """Django management command for TailwindCSS CLI operations."""
+    """Django management command for Tailwind CLI operations."""
 
-    help = "TailwindCSS CLI management: install, build, and clean operations."
+    help = "Tailwind CLI management: install, build, and clean operations."
 
     def add_arguments(self, parser: CommandParser) -> None:
         """Add command-line arguments."""
@@ -425,21 +423,21 @@ class Command(BaseCommand):
             "--install",
             dest="install",
             action="store_true",
-            help="Download and install the TailwindCSS CLI executable.",
+            help="Download and install the Tailwind CLI executable.",
         )
         group.add_argument(
             "-b",
             "--build",
             dest="build",
             action="store_true",
-            help="Build the TailwindCSS file.",
+            help="Build the Tailwind output CSS file.",
         )
         group.add_argument(
             "-cl",
             "--clean",
             dest="clean",
             action="store_true",
-            help="Delete the built TailwindCSS output file.",
+            help="Delete the built Tailwind output CSS file.",
         )
 
     def _add_option_arguments(self, parser: CommandParser) -> None:
@@ -466,7 +464,7 @@ class Command(BaseCommand):
 
     def handle(self, *args: Any, **options: Any) -> None:
         """Main command handler."""
-        config = settings.TAILWINDCSS
+        config = settings.TAILWIND
         command_type = self._determine_command(options)
         self._validate_options(command_type, options)
         verbose = not options.get("no_verbose", False)
@@ -484,7 +482,7 @@ class Command(BaseCommand):
         if command_count == 0:
             raise CommandError(
                 "You must specify a command: install, build, or clean. "
-                "Use 'tailwindcss --help' for usage information."
+                "Use 'tailwind --help' for usage information."
             )
         elif command_count > 1:
             raise CommandError("Only one command can be specified at a time.")

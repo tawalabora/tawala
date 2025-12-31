@@ -1,6 +1,7 @@
 from typing import TypedDict
 
 from .conf import Conf, ConfField
+from .pkg import PKG
 
 
 class OrgConf(Conf):
@@ -20,9 +21,9 @@ class OrgDict(TypedDict):
 _org = OrgConf()
 
 ORG: OrgDict = {
-    "name": _org.name or "Tawala",
-    "short_name": _org.short_name or "Tawala",
-    "description": _org.description or "Tawala Application",
+    "name": _org.name or PKG["name"].capitalize(),
+    "short_name": _org.short_name or PKG["name"].capitalize(),
+    "description": _org.description or f"{PKG['name'].capitalize()} Application",
 }
 
 __all__ = ["ORG"]

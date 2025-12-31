@@ -2,7 +2,17 @@ from typing import Any, Literal
 
 from django.utils.csp import CSP  # type: ignore[reportMissingTypeStubs]
 
-from .config import *  # noqa: F403
+from .commands import *  # noqa: F403
+from .contact import *  # noqa: F403
+from .databases import *  # noqa: F403
+from .email import *  # noqa: F403
+from .org import *  # noqa: F403
+from .pkg import *  # noqa: F403
+from .project import *  # noqa: F403
+from .security import *  # noqa: F403
+from .social_media import *  # noqa: F403
+from .storages import *  # noqa: F403
+from .tailwind import *  # noqa: F403
 
 # ==============================================================================
 # Application definition
@@ -34,7 +44,7 @@ MIDDLEWARE: list[str] = [
 ]
 
 ROOT_URLCONF: str = f"{PKG['name']}.urls"  # noqa: F405
-WSGI_APPLICATION: str = f"{PKG['name']}.wsgi.application"  # noqa: F405
+WSGI_APPLICATION: str = f"{PKG['name']}.api.wsgi.application"  # noqa: F405
 
 
 # ==============================================================================
