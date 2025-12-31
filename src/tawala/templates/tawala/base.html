@@ -1,4 +1,5 @@
-{% load org %}
+{% load pkg org tailwind %}
+{% pkg_name as pkg_name %}
 <!doctype html>
 <html lang="en">
   <head>
@@ -18,30 +19,28 @@
     />
     <link rel="apple-touch-icon" href="{% org_apple_touch_icon_url %}" />
     {# Title #}
-    {% block title %}
-      <title>{% org_name %}</title>
-    {% endblock title %}
+    {% block title %}<title>{% org_name %}</title>{% endblock title %}
     {# Fonts #}
     {% block fonts %}
     {% endblock fonts %}
-    {# Vendors #}
-    {% include "vendors/tailwindcss.html" %}
+    {# Vendor Files #}
     {% include "vendors/bootstrap-icons.html" %}
     {% include "vendors/aos.html" %}
-    {# App CSS #}
-    {% block styles %}
-    {% endblock styles %}
-    {# App JavaScript #}
-    {% block scripts %}
-    {% endblock scripts %}
+    {# Main CSS Files #}
+    {% tailwind_css %}
+    {% block css %}
+    {% endblock css %}
+    {# Main JS Files #}
+    {% block js %}
+    {% endblock js %}
   </head>
   <body>
-    {% include "widgets/preloader.html" %}
-    {% include "widgets/scroll-top.html" %}
-    {% include "sections/header-topbar.html" %}
-    {% include "sections/hero-breadcrumbs.html" %}
+    {% include pkg_name|add:"/widgets/preloader.html" %}
+    {% include pkg_name|add:"/widgets/scroll-top.html" %}
+    {% include pkg_name|add:"/sections/header-topbar.html" %}
+    {% include pkg_name|add:"/sections/hero-breadcrumbs.html" %}
     {% block main %}
     {% endblock main %}
-    {% include "sections/footer-bottombar.html" %}
+    {% include pkg_name|add:"/sections/footer-bottombar.html" %}
   </body>
 </html>

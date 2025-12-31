@@ -24,7 +24,7 @@ def get_social_media() -> dict[str, dict[str, str]]:
     return settings.SOCIAL_MEDIA
 
 
-@register.inclusion_tag("tawala/social_media_links.html")
+@register.inclusion_tag(f"{settings.PKG['name']}/social_media_links.html")
 def social_media_links(
     css_class: str = "", icon_size: str = "1.5rem"
 ) -> dict[str, str | dict[str, dict[str, str]]]:

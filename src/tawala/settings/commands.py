@@ -25,7 +25,7 @@ COMMANDS: CommandsDict = {
     or [
         "makemigrations",
         "migrate",
-        "tailwindcss build",
+        "tailwind build",
         "collectstatic --noinput",
     ],
 }

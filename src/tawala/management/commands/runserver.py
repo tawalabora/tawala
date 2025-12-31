@@ -63,7 +63,7 @@ class Command(RunserverCommand):
 
         # Disable the Tailwind watcher if flag is set
         if self.no_tailwind_watch:
-            from ...templatetags.tailwindcss import TailwindWatcher
+            from ...templatetags.tailwind import TailwindWatcher
 
             TailwindWatcher.disable()
 
@@ -141,12 +141,12 @@ class Command(RunserverCommand):
         executor = CommandExecutor(self)
 
         # Execute tailwind clean command
-        clean_result = executor.execute("tailwindcss --clean --no-verbose")
+        clean_result = executor.execute("tailwind clean --no-verbose")
         if not clean_result.success:
             self.stderr.write(self.style.WARNING(f"⚠️  Tailwind clean failed: {clean_result.error}"))
 
         # Execute tailwind build command
-        build_result = executor.execute("tailwindcss --build --no-verbose")
+        build_result = executor.execute("tailwind build --no-verbose")
         if not build_result.success:
             self.stderr.write(self.style.ERROR(f"❌ Tailwind build failed: {build_result.error}"))
 

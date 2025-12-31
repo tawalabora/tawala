@@ -19,7 +19,7 @@ class Command(CollectstaticCommand):
         super().set_options(**options)
 
         # Get the source CSS path from settings
-        source_css: Path = settings.TAILWINDCSS["source"]
+        source_css: Path = settings.TAILWIND["source"]
         source_css_dir = source_css.parent
 
         # Traverse up to find the 'static' directory
