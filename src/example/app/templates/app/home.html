@@ -1,8 +1,8 @@
-{% extends "tawala/global.html" %}
-{% load org contact %}
+{% extends "core/global.html" %}
+{% load org contactinfo %}
 
 {% block title %}
-  <title>Welcome - {% org_name %} App</title>
+  <title>Welcome - {% org "name" %} App</title>
 {% endblock title %}
 
 {% block fonts %}
@@ -18,8 +18,8 @@
   <main>
     <section class="container-full py-8">
       <h1>
-        <span>{% org_short_name %}</span>
-        {% get_contact_email_additional as emails %}
+        <span>{% org "short-name" %}</span>
+        {% contactinfo_email "all" as emails %}
         {% for email in emails %}
           <span> - </span>
           <span class="text-accent">{{ email }}</span>

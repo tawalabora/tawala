@@ -1,8 +1,8 @@
 # Tailwind CSS generated file
-/src/tawala/static/tawala/global/output.css
+/src/tawala/core/static/core/global.css
 
 # Vendor static files
-/src/tawala/static/tawala/vendor/
+/src/tawala/core/static/core/vendors/
 
 # Public static files
-/src/example/public/static/
+/src/example/public/

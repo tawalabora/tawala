@@ -1,10 +1,13 @@
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from django.conf import settings
 from django.contrib.staticfiles.management.commands.collectstatic import (
     Command as CollectstaticCommand,
 )
+
+if TYPE_CHECKING:
+    from ..settings.tailwind import TailwindConf
 
 
 class Command(CollectstaticCommand):
@@ -17,9 +20,10 @@ class Command(CollectstaticCommand):
         Override to add the Tailwind CSS source file to the ignore patterns.
         """
         super().set_options(**options)
+        tailwind_conf: "TailwindConf" = settings.TAILWIND
 
         # Get the source CSS path from settings
-        source_css: Path = settings.TAILWIND["source"]
+        source_css: Path = tailwind_conf.source
         source_css_dir = source_css.parent
 
         # Traverse up to find the 'static' directory

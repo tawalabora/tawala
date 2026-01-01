@@ -5,17 +5,20 @@ Supports dry-run mode for previewing commands before execution
 and continues running remaining commands even if one fails.
 """
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandParser
 
-from ..art import ArtType
-from ..run import (
+from .helpers.art import ArtType
+from .helpers.run import (
     CommandGenerator,
     CommandOutput,
     Output,
 )
+
+if TYPE_CHECKING:
+    from ..settings.runcommands import RunCommandsConf
 
 
 class InstallCommandGenerator(CommandGenerator):
@@ -23,7 +26,8 @@ class InstallCommandGenerator(CommandGenerator):
 
     def get_commands_from_settings(self) -> list[str]:
         """Retrieve install commands."""
-        return settings.COMMANDS["install"]
+        runcommands_conf: "RunCommandsConf" = settings.RUNCOMMANDS
+        return runcommands_conf.install
 
     def create_output_handler(self) -> CommandOutput:
         """Create the output handler for install commands."""
