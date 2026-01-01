@@ -5,4 +5,4 @@
 - [ ] FooterConf
 - [x] URLConf
 - [ ] AOSInitConf
-- [ ] Have defaults being set via the ConfField. The EnvFileGenerator should also show the defaults that variables use.
+- [x] Have defaults being set via the ConfField. The EnvFileGenerator should also show the defaults that variables use.

@@ -1,6 +1,7 @@
+import builtins
+import pathlib
 from enum import StrEnum
-from pathlib import Path
-from typing import Any, Type
+from typing import TYPE_CHECKING, Any, Optional, Type, cast
 
 from christianwhocodes.generators.file import (
     FileGenerator,
@@ -12,7 +13,8 @@ from christianwhocodes.generators.file import (
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandParser
 
-from ...settings.conf import Conf
+if TYPE_CHECKING:
+    from ..settings.generate import FileGeneratorPathsConf
 
 
 class FileOption(StrEnum):
@@ -25,18 +27,19 @@ class FileOption(StrEnum):
     ENV = "env"
 
 
-class VercelJSONFileGenerator(FileGenerator):
+class VercelFileGenerator(FileGenerator):
     f"""
     Generator for Vercel configuration file (vercel.json).
 
-    Creates a vercel.json file in the {settings.PKG["name"].capitalize()} project base directory.
-    Useful for deploying {settings.PKG["name"].capitalize()} apps to Vercel with custom install/build commands.
+    Creates a vercel.json file in the {"tawala".capitalize()} project base directory.
+    Useful for deploying {"tawala".capitalize()} apps to Vercel with custom install/build commands.
     """
 
     @property
-    def file_path(self) -> Path:
+    def file_path(self) -> pathlib.Path:
         """Return the path for the vercel.json."""
-        return settings.PROJECT["dirs"]["BASE"] / "vercel.json"
+        paths_config: "FileGeneratorPathsConf" = settings.FILE_GENERATOR_PATHS
+        return paths_config.vercel
 
     @property
     def data(self) -> str:
@@ -44,8 +47,8 @@ class VercelJSONFileGenerator(FileGenerator):
         return (
             "{\n"
             '  "$schema": "https://openapi.vercel.sh/vercel.json",\n'
-            f'  "installCommand": "uv run {settings.PKG["name"]} runinstall",\n'
-            f'  "buildCommand": "uv run {settings.PKG["name"]} runbuild",\n'
+            '  "installCommand": "uv run tawala runinstall",\n'
+            '  "buildCommand": "uv run tawala runbuild",\n'
             '  "rewrites": [\n'
             "    {\n"
             '      "source": "/(.*)",\n'
@@ -61,18 +64,19 @@ class ASGIFileGenerator(FileGenerator):
     Generator for ASGI configuration file (asgi.py).
 
     Creates an asgi.py file in the API directory.
-    Required for running {settings.PKG["name"].capitalize()} apps with ASGI servers.
+    Required for running {"tawala".capitalize()} apps with ASGI servers.
     """
 
     @property
-    def file_path(self) -> Path:
+    def file_path(self) -> pathlib.Path:
         """Return the path for the asgi.py"""
-        return settings.PROJECT["dirs"]["API"] / "asgi.py"
+        paths_config: "FileGeneratorPathsConf" = settings.FILE_GENERATOR_PATHS
+        return paths_config.asgi
 
     @property
     def data(self) -> str:
         """Return template content for asgi.py."""
-        return f"from {settings.PKG['name']}.api import asgi\n\napp = asgi.application\n"
+        return "from tawala.core.api import asgi\n\napp = asgi.application\n"
 
 
 class WSGIFileGenerator(FileGenerator):
@@ -80,223 +84,214 @@ class WSGIFileGenerator(FileGenerator):
     Generator for WSGI configuration file (wsgi.py).
 
     Creates a wsgi.py file in the API directory.
-    Required for running {settings.PKG["name"].capitalize()} apps with WSGI servers.
+    Required for running {"tawala".capitalize()} apps with WSGI servers.
     """
 
     @property
-    def file_path(self) -> Path:
+    def file_path(self) -> pathlib.Path:
         """Return the path for the wsgi.py."""
-        return settings.PROJECT["dirs"]["API"] / "wsgi.py"
+        paths_config: "FileGeneratorPathsConf" = settings.FILE_GENERATOR_PATHS
+        return paths_config.wsgi
 
     @property
     def data(self) -> str:
         """Return template content for wsgi.py file."""
-        return f"from {settings.PKG['name']}.api import wsgi\n\napp = wsgi.application\n"
-
-
-class EnvVariant(StrEnum):
-    """Available .env file variants."""
-
-    DEFAULT = "default"
-    EXAMPLE = "example"
-    PRODUCTION = "production"
-    LOCAL = "local"
+        return "from tawala.core.api import wsgi\n\napp = wsgi.application\n"
 
 
 class EnvFileGenerator(FileGenerator):
     f"""
-    Generator for environment configuration file (.env).
+    Generator for environment configuration file (.env.example).
 
-    Creates a .env file in the {settings.PKG["name"].capitalize()} project base directory with all
+    Creates a .env.example file in the {"tawala".capitalize()} project base directory with all
     possible environment variables from configuration classes.
     All variables are commented out by default.
     """
 
-    def __init__(self, variant: EnvVariant = EnvVariant.DEFAULT):
-        """Initialize the generator with a specific variant.
-
-        Args:
-            variant: The .env file variant to generate
-        """
-        self.variant = variant
-
     @property
-    def file_path(self) -> Path:
-        """Return the path for the .env file based on variant."""
-        base_dir = settings.PROJECT["dirs"]["BASE"]
-
-        match self.variant:
-            case EnvVariant.DEFAULT:
-                return base_dir / ".env"
-            case EnvVariant.EXAMPLE:
-                return base_dir / ".env.example"
-            case EnvVariant.PRODUCTION:
-                return base_dir / ".env.production"
-            case EnvVariant.LOCAL:
-                return base_dir / ".env.local"
+    def file_path(self) -> pathlib.Path:
+        """Return the path for the .env.example file."""
+        paths_config: "FileGeneratorPathsConf" = settings.FILE_GENERATOR_PATHS
+        return paths_config.env
 
     @property
     def data(self) -> str:
-        """Return template content for .env file."""
-        variant_title = self.variant.value.replace("_", " ").title()
-        if self.variant != EnvVariant.DEFAULT:
-            variant_title = f"{variant_title} "
-        else:
-            variant_title = ""
+        """Generate .env file content based on all ConfFields from Conf subclasses."""
+        from ..settings.conf import Conf
 
-        lines = [
-            "# " + "=" * 78,
-            f"# {variant_title}Environment Configuration",
-            f"# Generated by {settings.PKG['name'].capitalize()}",
-            "# " + "=" * 78,
-            "#",
-            f"# This file contains all available environment variables for your {settings.PKG['name'].capitalize()} project.",
-        ]
+        lines: list[str] = []
 
-        # Add variant-specific instructions
-        match self.variant:
-            case EnvVariant.EXAMPLE:
-                lines.append(
-                    "# * This is an example template. Copy to .env and update with actual values."
-                )
-            case EnvVariant.PRODUCTION:
-                lines.append("# ! This file contains production environment configuration.")
-                lines.append("# ! WARNING: Never commit this file to version control!")
-            case EnvVariant.LOCAL:
-                lines.append("# * This file contains local development overrides.")
-                lines.append("# * This file is typically git-ignored.")
-            case _:
-                lines.append("# * Uncomment and set values as needed.")
+        # Add header
+        lines.extend(self._add_header())
 
-        lines.extend(
-            [
-                "#",
-                "# * Priority: Environment variables take precedence over pyproject.toml settings.",
-                "# " + "=" * 78,
-                "",
-            ]
-        )
+        # Get all fields from Conf subclasses
+        env_fields = Conf.get_env_fields()
 
-        # Get all env fields from Conf subclasses
-        env_fields = Conf.get_all_env_fields()
-
-        # Group by class for better organization
+        # Group fields by class
         fields_by_class: dict[str, list[dict[str, Any]]] = {}
         for field in env_fields:
-            class_name = field["class"]
+            class_name = cast(str, field["class"])
             if class_name not in fields_by_class:
                 fields_by_class[class_name] = []
             fields_by_class[class_name].append(field)
 
-        # Generate commented-out env variables grouped by configuration class
-        for idx, (class_name, fields) in enumerate(sorted(fields_by_class.items())):
-            # Add separator between sections (except for first section)
-            if idx > 0:
-                lines.append("")
+        # Generate content for each class group
+        for class_name in sorted(fields_by_class.keys()):
+            fields = fields_by_class[class_name]
 
-            # Section header
-            lines.append("# " + "-" * 78)
-            lines.append(f"# {self._format_class_name(class_name)}")
-            lines.append("# " + "-" * 78)
+            # Add section header
+            lines.extend(self._add_section_header(class_name))
 
+            # Process each field in this class
             for field in fields:
-                env_key = field["env"]
+                env_var = field["env"]
                 toml_key = field["toml"]
+                choices_key = field["choices"]
+                default_value = field["default"]
                 field_type = field["type"]
-                field_name = field["name"]
+
+                # Add field documentation with proper format hints
+                lines.append(
+                    f"# Variable: {self._format_variable_hint(env_var, choices_key, field_type)}"
+                )
+                if toml_key:
+                    lines.append(f"# TOML Key: {toml_key}")
+
+                # Format default value for display
+                if default_value is not None:
+                    formatted_default = self._format_default_value(default_value, field_type)
+                    lines.append(f"# Default: {formatted_default}")
+                else:
+                    lines.append("# Default: (none)")
+
+                # Add the actual environment variable line (commented out)
+                if default_value is not None and default_value != "" and default_value != []:
+                    formatted_value = self._format_env_value(default_value, field_type)
+                    lines.append(f"{env_var}={formatted_value}")
+                else:
+                    lines.append(f"# {env_var}=")
 
                 lines.append("")
 
-                # Add descriptive comment with field name
-                lines.append(f"# {field_name.replace('_', ' ').title()}")
+            lines.append("")
 
-                # Add type hint
-                type_hint = self._format_type_hint(field_type)
-                lines.append(f"# * Type: {type_hint}")
-
-                # Add TOML alternative if available
-                if toml_key:
-                    lines.append(f"# * TOML: [tool.{settings.PKG['name']}.{toml_key}]")
-
-                # Add the commented-out variable with example value
-                example_value = self._get_example_value(field_type)
-                lines.append(f"# TODO: {env_key}={example_value}")
-
-        # Footer
-        lines.append("")
+        # Add footer
         lines.append("# " + "=" * 78)
         lines.append("# End of Configuration")
         lines.append("# " + "=" * 78)
 
         return "\n".join(lines)
 
-    @staticmethod
-    def _format_class_name(class_name: str) -> str:
-        """Format the class name for display."""
-        # Remove "Conf" suffix and add spaces
-        name = class_name.replace("Conf", "").replace("_", " ")
-        # Handle camelCase by adding spaces
-        import re
+    def _add_header(self) -> list[str]:
+        """Add header to the .env.example file."""
+        lines: list[str] = []
+        lines.append("# " + "=" * 78)
+        lines.append(f"# {'tawala'.upper()} Environment Configuration")
+        lines.append("# " + "=" * 78)
+        lines.append("#")
+        lines.append("# This file contains all available environment variables for configuration.")
+        lines.append("#")
+        lines.append("# Configuration Priority: ENV > TOML > Default")
+        lines.append("# " + "=" * 78)
+        lines.append("")
+        return lines
 
-        name = re.sub(r"([a-z])([A-Z])", r"\1 \2", name)
-        return f"{name.strip()} Configuration"
+    def _add_section_header(self, class_name: str) -> list[str]:
+        """Add section header for a configuration class."""
+        lines: list[str] = []
+        lines.append("# " + "-" * 78)
+        lines.append(f"# {class_name} Configuration")
+        lines.append("# " + "-" * 78)
+        lines.append("")
+        return lines
 
-    @staticmethod
-    def _format_type_hint(field_type: Any) -> str:
-        """Format the type hint for display in comments."""
-        if isinstance(field_type, str):
-            return field_type
-        elif field_type is bool:
-            return "bool"
-        elif field_type is str:
-            return "str"
-        elif field_type is Path:
-            return "path"
+    def _format_choices(self, choices: list[str]) -> str:
+        """Format choices as 'choice1' | 'choice2' | 'choice3'."""
+        return " | ".join(f'"{choice}"' for choice in choices)
+
+    def _get_type_example(self, field_type: type) -> str:
+        """Get example value for a field type."""
+        match field_type:
+            case builtins.bool:
+                return '"true" | "false"'
+            case builtins.int:
+                return '"123"'
+            case builtins.float:
+                return '"123.45"'
+            case builtins.list:
+                return '"value1,value2,value3"'
+            case pathlib.Path:
+                return '"/full/path/to/something"'
+            case _:
+                return '"value"'
+
+    def _format_variable_hint(
+        self, env_var: str, choices_key: Optional[list[str]], field_type: type
+    ) -> str:
+        """Format variable hint showing proper syntax based on type."""
+        if choices_key:
+            return f"{env_var}={self._format_choices(choices_key)}"
         else:
-            return str(field_type)
+            return f"{env_var}={self._get_type_example(field_type)}"
 
-    @staticmethod
-    def _get_example_value(field_type: Any) -> str:
-        """Get an example value based on the field type."""
-        if isinstance(field_type, str):
-            if field_type == "email":
-                return "user@example.com"
-            elif field_type.startswith("list["):
-                if "email" in field_type:
-                    return "email1@example.com,email2@example.com"
-                else:
-                    return "value1,value2,value3"
-            else:
-                return "your_value_here"
-        elif field_type is bool:
-            return "true"
-        elif field_type is Path:
-            return "/path/to/directory"
-        else:
-            return "your_value_here"
+    def _format_default_value(self, value: Any, field_type: type) -> str:
+        """Format default value for display in comments."""
+        if value is None:
+            return "(none)"
+
+        match field_type:
+            case builtins.bool:
+                return "true" if value else "false"
+            case builtins.list:
+                if isinstance(value, list):
+                    list_items = cast(list[Any], value)
+                    if not list_items:
+                        return "(empty list)"
+                    return ",".join(str(v) for v in list_items)
+                return str(value)
+            case pathlib.Path:
+                return str(pathlib.PurePosixPath(value))
+            case _:
+                return str(value)
+
+    def _format_env_value(self, value: Any, field_type: type) -> str:
+        """Format value for environment variable assignment."""
+        if value is None or value == "":
+            return '""'
+
+        match field_type:
+            case builtins.bool:
+                return '"true"' if value else '"false"'
+            case builtins.list:
+                if isinstance(value, list):
+                    list_items = cast(list[Any], value)
+                    if not list_items:
+                        return '""'
+                    return f'"{",".join(str(v) for v in list_items)}"'
+                return f'"{value}"'
+            case pathlib.Path:
+                return f'"{str(pathlib.PurePosixPath(value))}"'
+            case _:
+                return f'"{str(value)}"'
 
 
 class Command(BaseCommand):
-    help: str = "Generate configuration files (e.g., .env, vercel.json, asgi.py, wsgi.py, .pg_service.conf, pgpass.conf / .pgpass, ssh config)."
+    help: str = "Generate configuration files (e.g., .env.example, vercel.json, asgi.py, wsgi.py, .pg_service.conf, pgpass.conf / .pgpass, ssh config)."
 
     def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument(
             "-f",
             "--file",
+            dest="file",
             choices=[opt.value for opt in FileOption],
             type=FileOption,
             required=True,
             help=f"Specify which file to generate (options: {', '.join(o.value for o in FileOption)}).",
         )
         parser.add_argument(
-            "--variant",
-            choices=[v.value for v in EnvVariant],
-            type=EnvVariant,
-            default=EnvVariant.DEFAULT,
-            help="Specify .env file variant (only applies when --file=env). Options: default, example, production, local.",
-        )
-        parser.add_argument(
+            "-y",
             "--force",
+            dest="force",
             action="store_true",
             help="Force overwrite without confirmation.",
         )
@@ -304,22 +299,17 @@ class Command(BaseCommand):
     def handle(self, *args: Any, **options: Any) -> None:
         file_option: FileOption = FileOption(options["file"])
         force: bool = options["force"]
-        variant: EnvVariant = options.get("variant", EnvVariant.DEFAULT)
 
         generators: dict[FileOption, Type[FileGenerator]] = {
-            FileOption.VERCEL: VercelJSONFileGenerator,
+            FileOption.VERCEL: VercelFileGenerator,
             FileOption.ASGI: ASGIFileGenerator,
             FileOption.WSGI: WSGIFileGenerator,
             FileOption.PG_SERVICE: PgServiceFileGenerator,
             FileOption.PGPASS: PgPassFileGenerator,
             FileOption.SSH_CONFIG: SSHConfigFileGenerator,
+            FileOption.ENV: EnvFileGenerator,
         }
 
-        # Handle ENV separately to pass variant
-        if file_option == FileOption.ENV:
-            generator: FileGenerator = EnvFileGenerator(variant=variant)
-        else:
-            generator_class: Type[FileGenerator] = generators[file_option]
-            generator = generator_class()
-
+        generator_class: Type[FileGenerator] = generators[file_option]
+        generator = generator_class()
         generator.create(force=force)

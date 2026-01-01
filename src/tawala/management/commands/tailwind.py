@@ -11,12 +11,16 @@ from pathlib import Path
 from platform import machine, system
 from stat import S_IXGRP, S_IXOTH, S_IXUSR
 from subprocess import DEVNULL, CalledProcessError, run
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
 from urllib.error import HTTPError, URLError
 from urllib.request import urlretrieve
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError, CommandParser
+from django.core.management.color import Style
+
+if TYPE_CHECKING:
+    from ..settings.tailwind import TailwindConf
 
 
 class PlatformInfo:
@@ -37,7 +41,7 @@ class PlatformInfo:
         "armv8": "arm64",
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.os_name = self._detect_os()
         self.architecture = self._detect_architecture()
 
@@ -76,7 +80,7 @@ class TailwindDownloader:
 
     BASE_URL = "https://github.com/tailwindlabs/tailwindcss/releases"
 
-    def __init__(self, stdout_writer: Callable[[str], None], verbose: bool = True):
+    def __init__(self, stdout_writer: Callable[[str], None], verbose: bool = True) -> None:
         self.write = stdout_writer
         self.verbose = verbose
 
@@ -153,27 +157,27 @@ class InstallHandler:
 
     def __init__(
         self,
-        config: dict[str, Any],
+        tailwind_config: "TailwindConf",
         stdout_writer: Callable[[str], None],
-        style: Any,
+        style: Style,
         verbose: bool = True,
-    ):
-        self.config = config
+    ) -> None:
+        self.tailwind_config = tailwind_config
         self.write = stdout_writer
         self.style = style
         self.verbose = verbose
         self.downloader = TailwindDownloader(stdout_writer, verbose)
 
-    def install(self, auto_confirm: bool = False, use_cache: bool = False) -> None:
+    def install(self, force: bool = False, use_cache: bool = False) -> None:
         """Install the Tailwind CLI binary."""
         platform = PlatformInfo()
         if self.verbose:
             self._display_platform_info(platform)
 
-        cli_path = self.config["cli"]
+        cli_path = self.tailwind_config.cli
         self._ensure_directory_exists(cli_path.parent)
 
-        version = self.config["version"]
+        version = self.tailwind_config.version
         download_url = self.downloader.get_download_url(version, platform)
 
         if self.verbose:
@@ -182,10 +186,10 @@ class InstallHandler:
         if self._should_use_cache(cli_path, use_cache):
             return
 
-        if not self._handle_existing_file(cli_path, auto_confirm):
+        if not self._handle_existing_file(cli_path, force):
             return
 
-        if not self._confirm_download(auto_confirm):
+        if not self._confirm_download(force):
             return
 
         self._perform_installation(download_url, cli_path, version, platform)
@@ -249,9 +253,9 @@ class InstallHandler:
             self.write("Installation cancelled.")
         return False
 
-    def _confirm_download(self, auto_confirm: bool) -> bool:
-        """Confirm download with user unless auto-confirmed."""
-        if auto_confirm:
+    def _confirm_download(self, force: bool) -> bool:
+        """Confirm download with user unless auto-confirmed (force)."""
+        if force:
             return True
 
         confirm = input("\nProceed with download? (y/N): ").strip().lower()
@@ -288,21 +292,21 @@ class BuildHandler:
 
     def __init__(
         self,
-        config: dict[str, Any],
+        tailwind_config: "TailwindConf",
         stdout_writer: Callable[[str], None],
-        style: Any,
+        style: Style,
         verbose: bool = True,
-    ):
-        self.config = config
+    ) -> None:
+        self.tailwind_config = tailwind_config
         self.write = stdout_writer
         self.style = style
         self.verbose = verbose
 
     def build(self) -> None:
         """Build the Tailwind output css file."""
-        cli_path = self.config["cli"]
-        source_css = self.config["source"]
-        output_css = self.config["output"]
+        cli_path = self.tailwind_config.cli
+        source_css = self.tailwind_config.source
+        output_css = self.tailwind_config.output
 
         self._validate_source_file(source_css)
         self._ensure_output_directory(output_css.parent)
@@ -349,8 +353,7 @@ class BuildHandler:
                 run(command, check=True, stdout=DEVNULL, stderr=DEVNULL)
         except FileNotFoundError:
             raise CommandError(
-                f"Tailwind CLI not found at '{cli_path}'. "
-                f"Run '{settings.PKG['name']} tailwind install' first."
+                f"Tailwind CLI not found at '{cli_path}'. Run 'tawala tailwind install' first."
             )
         except CalledProcessError as e:
             raise CommandError(f"Tailwind build failed: {e}")
@@ -363,19 +366,19 @@ class CleanHandler:
 
     def __init__(
         self,
-        config: dict[str, Any],
+        tailwind_config: "TailwindConf",
         stdout_writer: Callable[[str], None],
-        style: Any,
+        style: Style,
         verbose: bool = True,
-    ):
-        self.config = config
+    ) -> None:
+        self.tailwind_config = tailwind_config
         self.write = stdout_writer
         self.style = style
         self.verbose = verbose
 
     def clean(self) -> None:
         """Delete the built Tailwind output CSS file."""
-        output_css = self.config["output"]
+        output_css = self.tailwind_config.output
 
         if not output_css.exists():
             return
@@ -444,8 +447,8 @@ class Command(BaseCommand):
         """Add additional option arguments."""
         parser.add_argument(
             "-y",
-            "--yes",
-            dest="auto_confirm",
+            "--force",
+            dest="force",
             action="store_true",
             help="Automatically confirm all prompts.",
         )
@@ -464,11 +467,11 @@ class Command(BaseCommand):
 
     def handle(self, *args: Any, **options: Any) -> None:
         """Main command handler."""
-        config = settings.TAILWIND
+        tailwind_config: "TailwindConf" = settings.TAILWIND
         command_type = self._determine_command(options)
         self._validate_options(command_type, options)
         verbose = not options.get("no_verbose", False)
-        self._execute_command(command_type, config, options, verbose)
+        self._execute_command(command_type, tailwind_config, options, verbose)
 
     def _determine_command(self, options: dict[str, Any]) -> str:
         """Determine which command to execute."""
@@ -502,20 +505,20 @@ class Command(BaseCommand):
     def _execute_command(
         self,
         command_type: str,
-        config: dict[str, Any],
+        tailwind_config: "TailwindConf",
         options: dict[str, Any],
         verbose: bool,
     ) -> None:
         """Execute the specified command."""
         if command_type == "install":
-            handler = InstallHandler(config, self.stdout.write, self.style, verbose)
+            handler = InstallHandler(tailwind_config, self.stdout.write, self.style, verbose)
             handler.install(
-                auto_confirm=options.get("auto_confirm", False),
+                force=options.get("force", False),
                 use_cache=options.get("use_cache", False),
             )
         elif command_type == "build":
-            handler = BuildHandler(config, self.stdout.write, self.style, verbose)
+            handler = BuildHandler(tailwind_config, self.stdout.write, self.style, verbose)
             handler.build()
         elif command_type == "clean":
-            handler = CleanHandler(config, self.stdout.write, self.style, verbose)
+            handler = CleanHandler(tailwind_config, self.stdout.write, self.style, verbose)
             handler.clean()

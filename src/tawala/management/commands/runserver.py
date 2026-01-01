@@ -1,6 +1,7 @@
 from socket import gaierror, gethostbyname, gethostname
 from typing import Any
 
+from christianwhocodes.helpers import Version
 from django.conf import settings
 from django.contrib.staticfiles.management.commands.runserver import (
     Command as RunserverCommand,
@@ -8,8 +9,8 @@ from django.contrib.staticfiles.management.commands.runserver import (
 from django.core.management.base import CommandParser
 from django.utils import timezone
 
-from ..art import ArtPrinter
-from ..run import CommandExecutor
+from .helpers.art import ArtPrinter
+from .helpers.run import CommandExecutor
 
 
 class Command(RunserverCommand):
@@ -63,7 +64,7 @@ class Command(RunserverCommand):
 
         # Disable the Tailwind watcher if flag is set
         if self.no_tailwind_watch:
-            from ...templatetags.tailwind import TailwindWatcher
+            from ..templatetags.tailwind import TailwindWatcher
 
             TailwindWatcher.disable()
 
@@ -76,9 +77,9 @@ class Command(RunserverCommand):
         return super().inner_run(*args, **options)  # type: ignore
 
     def check_migrations(self) -> None:
-        f"""Check for unapplied migrations and display a warning.
+        """Check for unapplied migrations and display a warning.
 
-        Overrides Django's default check_migrations to use '{settings.PKG["name"]} migrate'
+        Overrides Django's default check_migrations to use 'tawala migrate'
         instead of 'python manage.py migrate' in the warning message.
 
         Prints a notice if there are unapplied migrations that could affect
@@ -109,7 +110,7 @@ class Command(RunserverCommand):
                     }
                 )
             )
-            OVERRIDE = f"{settings.PKG['name']} migrate"  # Only thing we're overriding
+            OVERRIDE = "tawala migrate"  # Only thing we're overriding
             self.stdout.write(self.style.NOTICE(f"Run {OVERRIDE} to apply them."))
 
     def on_bind(self, server_port: int) -> None:
@@ -196,7 +197,7 @@ class Command(RunserverCommand):
         """Print version."""
 
         self.stdout.write(
-            f"  🔧 {settings.PKG['name'].capitalize()} version: {self.style.HTTP_NOT_MODIFIED(settings.PKG['version'])}"
+            f"  🔧 {'tawala'.capitalize()} version: {self.style.HTTP_NOT_MODIFIED(Version.get('tawala')[0])}"
         )
 
     def _print_local_url(self, server_port: int) -> None:

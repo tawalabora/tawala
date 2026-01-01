@@ -12,9 +12,3 @@ dependencies = [
 ]
 
 [tool.tawala]
-secret-key = "django-insecure-change-me-in-production-via-env-variable"
-debug = true
-allowed-hosts = ["localhost", "127.0.0.1"]
-
-[tool.tawala.commands]
-install = ["tailwind install -y --use-cache"]
