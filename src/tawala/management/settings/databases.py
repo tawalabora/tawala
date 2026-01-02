@@ -6,7 +6,8 @@
 # ==============================================================================
 from pathlib import Path
 
-from ..types import DatabaseDict, DatabaseOptionsDict, DatabasesDict
+from tawala.management.types import DatabaseDict, DatabaseOptionsDict, DatabasesDict
+
 from .conf import Conf, ConfField
 
 

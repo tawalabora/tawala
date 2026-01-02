@@ -19,8 +19,10 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError, CommandParser
 from django.core.management.color import Style
 
+from tawala.management.utils.constants import TAWALA
+
 if TYPE_CHECKING:
-    from ..settings.tailwind import TailwindConf
+    from tawala.management.settings.tailwind import TailwindConf
 
 
 class PlatformInfo:
@@ -353,7 +355,7 @@ class BuildHandler:
                 run(command, check=True, stdout=DEVNULL, stderr=DEVNULL)
         except FileNotFoundError:
             raise CommandError(
-                f"Tailwind CLI not found at '{cli_path}'. Run 'tawala tailwind install' first."
+                f"Tailwind CLI not found at '{cli_path}'. Run '{TAWALA} tailwind install' first."
             )
         except CalledProcessError as e:
             raise CommandError(f"Tailwind build failed: {e}")

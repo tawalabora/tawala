@@ -11,6 +11,8 @@ from dataclasses import dataclass
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
 
+from tawala.management.utils.constants import TAWALA
+
 from .art import ArtPrinter, ArtType
 
 
@@ -344,7 +346,7 @@ class Output(CommandOutput):
         self.command.stdout.write(self.command.style.ERROR(f"\n❌ No {mode} commands configured!"))
         self.command.stdout.write(
             self.command.style.WARNING(
-                "   Define {mode} commands in your '.env' file or in pyproject.toml [tool.tawala] section:\n"
+                f"   Define {mode} commands in your '.env' file or in pyproject.toml [tool.{TAWALA}] section:\n"
             )
         )
         self.command.stdout.write("")

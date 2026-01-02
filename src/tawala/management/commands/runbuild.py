@@ -14,7 +14,7 @@ from .helpers.art import ArtType
 from .helpers.run import CommandGenerator, CommandOutput, Output
 
 if TYPE_CHECKING:
-    from ..settings.runcommands import RunCommandsConf
+    from tawala.management.settings.runcommands import RunCommandsConf
 
 
 class BuildCommandGenerator(CommandGenerator):

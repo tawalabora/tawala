@@ -3,11 +3,13 @@ from shutil import get_terminal_size
 
 from django.core.management.base import BaseCommand
 
+from tawala.management.utils.constants import TAWALA
+
 
 class ArtType(StrEnum):
     """Enumeration of available ASCII art types."""
 
-    PROG_NAME = "tawala"
+    PROG_NAME = TAWALA
     DEV = "dev"
     BUILD = "build"
     INSTALL = "install"

@@ -1,19 +1,16 @@
 from django.utils.csp import CSP  # type: ignore[reportMissingTypeStubs]
 
-from .apps import *  # noqa: F403
 from .auth import *  # noqa: F403
+from .base import *  # noqa: F403
 from .contactinfo import *  # noqa: F403
 from .databases import *  # noqa: F403
-from .email import *  # noqa: F403
 from .generate import *  # noqa: F403
-from .org import *  # noqa: F403
 from .runcommands import *  # noqa: F403
 from .security import *  # noqa: F403
 from .social import *  # noqa: F403
 from .storages import *  # noqa: F403
 from .tailwind import *  # noqa: F403
 from .urls import *  # noqa: F403
-
 
 # ==============================================================================
 # Internationalization

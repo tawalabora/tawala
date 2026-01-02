@@ -1,0 +1,33 @@
+{% load static %} {# Preloader #}
+<style nonce="{{ csp_nonce }}">
+  @keyframes animate-preloader {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  #preloader:before {
+    animation: animate-preloader 1.5s linear infinite;
+  }
+</style>
+<div
+  id="preloader"
+  class="bg-background before:border-y-accent fixed inset-0 z-999999 overflow-hidden transition-all duration-600 ease-out before:fixed before:top-[calc(50%-30px)] before:left-[calc(50%-30px)] before:h-[60px] before:w-[60px] before:rounded-full before:border-[6px] before:border-x-transparent before:content-['']"
+></div>
+<script defer src="{% static 'ui/base/preloader.js' %}"></script>
+{# Scroll Top #}
+<style nonce="{{ csp_nonce }}">
+  #scroll-top:hover {
+    background-color: color-mix(in srgb, var(--color-accent), transparent 20%);
+  }
+</style>
+<a
+  href="#"
+  id="scroll-top"
+  class="bg-accent hover:text-contrast invisible fixed right-[15px] bottom-[15px] z-99999 flex h-10 w-10 items-center justify-center rounded opacity-0 transition-all duration-400 [&.active]:visible [&.active]:opacity-100"
+  ><i class="bi bi-arrow-up-short text-contrast text-2xl"></i
+></a>
+<script defer src="{% static 'ui/base/scroll-top.js' %}"></script>

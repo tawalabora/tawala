@@ -1,6 +1,6 @@
 from typing import get_args
 
-from ..types import SocialKey
+from tawala.management.types import SocialKey
 from .conf import Conf, ConfField
 
 

@@ -7,7 +7,7 @@ from django.contrib.staticfiles.management.commands.collectstatic import (
 )
 
 if TYPE_CHECKING:
-    from ..settings.tailwind import TailwindConf
+    from tawala.management.settings.tailwind import TailwindConf
 
 
 class Command(CollectstaticCommand):

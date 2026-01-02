@@ -18,7 +18,7 @@ from .helpers.run import (
 )
 
 if TYPE_CHECKING:
-    from ..settings.runcommands import RunCommandsConf
+    from tawala.management.settings.runcommands import RunCommandsConf
 
 
 class InstallCommandGenerator(CommandGenerator):

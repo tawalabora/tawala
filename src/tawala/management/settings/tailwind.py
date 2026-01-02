@@ -1,6 +1,8 @@
 from pathlib import Path
 
-from .apps import MAIN_INSTALLED_APP
+from tawala.management.utils.constants import UI, UI_PATH
+
+from .base import MAIN_INSTALLED_APP
 from .conf import Conf, ConfField
 
 
@@ -22,15 +24,11 @@ class TailwindConf(Conf):
         type=Path,
     )
     source = ConfField(
-        default=Path.cwd() / MAIN_INSTALLED_APP / "static" / MAIN_INSTALLED_APP / "global.css",
+        default=Path.cwd() / MAIN_INSTALLED_APP / "static" / MAIN_INSTALLED_APP / "index.css",
         type=Path,
     )
     output = ConfField(
-        default=Path(__file__).resolve().parent.parent.parent
-        / "core"
-        / "static"
-        / "core"
-        / "global.css",
+        default=UI_PATH / "static" / UI / "base" / "index.css",
         type=Path,
     )
 

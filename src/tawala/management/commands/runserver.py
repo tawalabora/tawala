@@ -1,13 +1,15 @@
 from socket import gaierror, gethostbyname, gethostname
 from typing import Any
 
-from christianwhocodes.helpers import Version
+from christianwhocodes.helpers.version import Version
 from django.conf import settings
 from django.contrib.staticfiles.management.commands.runserver import (
     Command as RunserverCommand,
 )
 from django.core.management.base import CommandParser
 from django.utils import timezone
+
+from tawala.management.utils.constants import TAWALA
 
 from .helpers.art import ArtPrinter
 from .helpers.run import CommandExecutor
@@ -64,7 +66,7 @@ class Command(RunserverCommand):
 
         # Disable the Tailwind watcher if flag is set
         if self.no_tailwind_watch:
-            from ..templatetags.tailwind import TailwindWatcher
+            from tawala.ui.templatetags.tailwind import TailwindWatcher
 
             TailwindWatcher.disable()
 
@@ -77,9 +79,9 @@ class Command(RunserverCommand):
         return super().inner_run(*args, **options)  # type: ignore
 
     def check_migrations(self) -> None:
-        """Check for unapplied migrations and display a warning.
+        f"""Check for unapplied migrations and display a warning.
 
-        Overrides Django's default check_migrations to use 'tawala migrate'
+        Overrides Django's default check_migrations to use '{TAWALA} migrate'
         instead of 'python manage.py migrate' in the warning message.
 
         Prints a notice if there are unapplied migrations that could affect
@@ -110,7 +112,7 @@ class Command(RunserverCommand):
                     }
                 )
             )
-            OVERRIDE = "tawala migrate"  # Only thing we're overriding
+            OVERRIDE = f"{TAWALA} migrate"  # Only thing we're overriding
             self.stdout.write(self.style.NOTICE(f"Run {OVERRIDE} to apply them."))
 
     def on_bind(self, server_port: int) -> None:
@@ -197,7 +199,7 @@ class Command(RunserverCommand):
         """Print version."""
 
         self.stdout.write(
-            f"  🔧 {'tawala'.capitalize()} version: {self.style.HTTP_NOT_MODIFIED(Version.get('tawala')[0])}"
+            f"  🔧 {TAWALA.capitalize()} version: {self.style.HTTP_NOT_MODIFIED(Version.get(TAWALA)[0])}"
         )
 
     def _print_local_url(self, server_port: int) -> None:

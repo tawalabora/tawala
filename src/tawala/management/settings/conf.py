@@ -4,9 +4,13 @@ from os import environ
 from pathlib import Path
 from typing import Any, NoReturn, Optional, cast
 
-from christianwhocodes.helpers import ExitCode, PyProject, TypeConverter
-from christianwhocodes.stdout import Text, print
+from christianwhocodes.helpers.enums import ExitCode
+from christianwhocodes.helpers.pyproject import PyProject
+from christianwhocodes.helpers.stdout import Text, print
+from christianwhocodes.helpers.types import TypeConverter
 from dotenv import dotenv_values
+
+from tawala.management.utils.constants import TAWALA
 
 from ..types import ValueType
 
@@ -140,16 +144,16 @@ class Conf:
     def _load_project(cls) -> Optional[NoReturn]:
         try:
             toml_section: dict[str, Any] = PyProject(Path.cwd() / "pyproject.toml").data["tool"][
-                "tawala"
+                TAWALA
             ]
 
         except (FileNotFoundError, KeyError):
             cls._validated = False
             print(
-                f"Are you currently executing in a {'tawala'.capitalize()} project base directory? "
-                f"If not navigate to your project's root or create a new {'tawala'.capitalize()} project to run the command.\n"
-                "'tool.tawala'section must be included in 'pyproject.toml' even if empty, "
-                f"as it serves as a {'tawala'.capitalize()} project identifier.",
+                f"Are you currently executing in a {TAWALA.capitalize()} project base directory? "
+                f"If not navigate to your project's root or create a new {TAWALA.capitalize()} project to run the command.\n"
+                f"'tool.{TAWALA}' section must be included in 'pyproject.toml' even if empty, "
+                f"as it serves as a {TAWALA.capitalize()} project identifier.",
                 Text.WARNING,
             )
 

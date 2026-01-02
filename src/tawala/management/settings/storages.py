@@ -8,7 +8,9 @@
 # ==============================================================================
 from pathlib import Path
 
-from ..types import StoragesDict
+from tawala.management.types import StoragesDict
+from tawala.management.utils.constants import TAWALA
+
 from .conf import Conf, ConfField
 
 
@@ -38,7 +40,7 @@ def _get_storages_config() -> StoragesDict:
         case "filesystem" | "local" | "fs":
             storage_backend = "django.core.files.storage.FileSystemStorage"
         case "blob" | "vercel" | "vercel-blob":
-            storage_backend = "tawala.management.backends.storages.VercelBlobStorage"
+            storage_backend = f"{TAWALA}.utils.backends.storages.VercelBlobStorage"
         case _:
             raise ValueError(f"Unsupported storage backend: {backend}")
 

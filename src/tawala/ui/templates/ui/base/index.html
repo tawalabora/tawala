@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    {% include 'ui/base/meta.html' %}
+    {% block fonts %}
+    {% endblock fonts %}
+    {% include 'ui/base/vendors.html' %}
+    {% tailwind_css %}
+    {% block scripts %}
+    {% endblock scripts %}
+  </head>
+  <body>
+    {% include "ui/base/overlay.html" %}
+    {% include "ui/base/header.html" %}
+    {% include "ui/base/hero.html" %}
+    {% block main %}
+    {% endblock main %}
+    {% include "ui/base/footer.html" %}
+  </body>
+</html>

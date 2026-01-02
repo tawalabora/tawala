@@ -11,7 +11,7 @@ license = { file = "LICENSE" }
 authors = [{ name = "christianwhocodes", email = "kevin@tawalabora.space" }]
 requires-python = ">=3.12"
 dependencies = [
-    "christianwhocodes>=1.2.3",
+    "christianwhocodes>=1.2.4",
     "django>=6.0",
     "django-browser-reload>=1.21.0",
     "django-phonenumber-field[phonenumberslite]>=8.4.0",
@@ -25,11 +25,12 @@ repository = "https://github.com/tawalabora/tawala"
 issues = "https://github.com/tawalabora/tawala/issues"
 
 [project.scripts]
-tawala = "tawala.management.cli:main"
-twl = "tawala.management.cli:main"
+tawala = "tawala.management.utils.cli:main"
+twl = "tawala.management.utils.cli:main"
 
 [dependency-groups]
 dev = [
+    "djlint>=1.36.4",
     "pillow>=12.0.0",
     "psycopg[binary,pool]>=3.3.2",
     "vercel>=0.3.6",

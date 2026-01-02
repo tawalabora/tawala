@@ -1,4 +1,5 @@
-from ...utils.helpers import normalize_url_path
+from christianwhocodes.helpers.urls import normalize_url_path
+
 from .conf import Conf, ConfField
 
 

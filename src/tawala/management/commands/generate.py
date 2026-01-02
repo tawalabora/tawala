@@ -13,8 +13,10 @@ from christianwhocodes.generators.file import (
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandParser
 
+from tawala.management.utils.constants import DJANGO_SETTINGS_MODULE, TAWALA
+
 if TYPE_CHECKING:
-    from ..settings.generate import FileGeneratorPathsConf
+    from tawala.management.settings.generate import FileGeneratorPathsConf
 
 
 class FileOption(StrEnum):
@@ -31,8 +33,8 @@ class VercelFileGenerator(FileGenerator):
     f"""
     Generator for Vercel configuration file (vercel.json).
 
-    Creates a vercel.json file in the {"tawala".capitalize()} project base directory.
-    Useful for deploying {"tawala".capitalize()} apps to Vercel with custom install/build commands.
+    Creates a vercel.json file in the {TAWALA.capitalize()} project base directory.
+    Useful for deploying {TAWALA.capitalize()} apps to Vercel with custom install/build commands.
     """
 
     @property
@@ -47,8 +49,8 @@ class VercelFileGenerator(FileGenerator):
         return (
             "{\n"
             '  "$schema": "https://openapi.vercel.sh/vercel.json",\n'
-            '  "installCommand": "uv run tawala runinstall",\n'
-            '  "buildCommand": "uv run tawala runbuild",\n'
+            f'  "installCommand": "uv run {TAWALA} runinstall",\n'
+            f'  "buildCommand": "uv run {TAWALA} runbuild",\n'
             '  "rewrites": [\n'
             "    {\n"
             '      "source": "/(.*)",\n'
@@ -64,7 +66,7 @@ class ASGIFileGenerator(FileGenerator):
     Generator for ASGI configuration file (asgi.py).
 
     Creates an asgi.py file in the API directory.
-    Required for running {"tawala".capitalize()} apps with ASGI servers.
+    Required for running {TAWALA.capitalize()} apps with ASGI servers.
     """
 
     @property
@@ -76,7 +78,26 @@ class ASGIFileGenerator(FileGenerator):
     @property
     def data(self) -> str:
         """Return template content for asgi.py."""
-        return "from tawala.core.api import asgi\n\napp = asgi.application\n"
+        return (
+            '"""\n'
+            "ASGI config\n"
+            "\n"
+            "It exposes the ASGI callable as a module-level variable named ``application``.\n"
+            "\n"
+            "For more information on this file, see\n"
+            "https://docs.djangoproject.com/en/stable/howto/deployment/asgi/\n"
+            '"""\n'
+            "\n"
+            "from os import environ\n"
+            "\n"
+            "from django.core.asgi import get_asgi_application\n"
+            "\n"
+            f'environ.setdefault("DJANGO_SETTINGS_MODULE", "{DJANGO_SETTINGS_MODULE}")\n'
+            "\n"
+            "application = get_asgi_application()\n"
+            "\n"
+            "app = application\n"
+        )
 
 
 class WSGIFileGenerator(FileGenerator):
@@ -84,7 +105,7 @@ class WSGIFileGenerator(FileGenerator):
     Generator for WSGI configuration file (wsgi.py).
 
     Creates a wsgi.py file in the API directory.
-    Required for running {"tawala".capitalize()} apps with WSGI servers.
+    Required for running {TAWALA.capitalize()} apps with WSGI servers.
     """
 
     @property
@@ -96,14 +117,33 @@ class WSGIFileGenerator(FileGenerator):
     @property
     def data(self) -> str:
         """Return template content for wsgi.py file."""
-        return "from tawala.core.api import wsgi\n\napp = wsgi.application\n"
+        return (
+            '"""\n'
+            "WSGI config\n"
+            "\n"
+            "It exposes the WSGI callable as a module-level variable named ``application``.\n"
+            "\n"
+            "For more information on this file, see\n"
+            "https://docs.djangoproject.com/en/stable/howto/deployment/wsgi/\n"
+            '"""\n'
+            "\n"
+            "from os import environ\n"
+            "\n"
+            "from django.core.wsgi import get_wsgi_application\n"
+            "\n"
+            f'environ.setdefault("DJANGO_SETTINGS_MODULE", "{DJANGO_SETTINGS_MODULE}")\n'
+            "\n"
+            "application = get_wsgi_application()\n"
+            "\n"
+            "app = application\n"
+        )
 
 
 class EnvFileGenerator(FileGenerator):
     f"""
     Generator for environment configuration file (.env.example).
 
-    Creates a .env.example file in the {"tawala".capitalize()} project base directory with all
+    Creates a .env.example file in the {TAWALA.capitalize()} project base directory with all
     possible environment variables from configuration classes.
     All variables are commented out by default.
     """
@@ -186,7 +226,7 @@ class EnvFileGenerator(FileGenerator):
         """Add header to the .env.example file."""
         lines: list[str] = []
         lines.append("# " + "=" * 78)
-        lines.append(f"# {'tawala'.upper()} Environment Configuration")
+        lines.append(f"# {TAWALA.upper()} Environment Configuration")
         lines.append("# " + "=" * 78)
         lines.append("#")
         lines.append("# This file contains all available environment variables for configuration.")

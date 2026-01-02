@@ -12,4 +12,4 @@ __pycache__/
 /.env*
 
 # SQLite database file
-/db.sqlite3
+/db.sqlite3*
